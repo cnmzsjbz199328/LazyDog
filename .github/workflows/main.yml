@@ -28,9 +28,17 @@ jobs:
       
       - name: Build Project
         run: npm run build
+        
+      - name: Debug Cloudflare API Projects
+        run: |
+          echo "Checking Cloudflare Pages projects"
+          RESPONSE=$(curl -s -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+                -H "Content-Type: application/json" \
+                "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects")
+          echo "Projects available: $(echo $RESPONSE | grep -o '"name":"[^"]*"' | cut -d'"' -f4)"
       
       - name: Publish to Cloudflare Pages
-        uses: cloudflare/pages-action@v1
+        uses: cloudflare/pages-action@v2  # 更新到 v2 版本
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
