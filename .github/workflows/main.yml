@@ -38,7 +38,7 @@ jobs:
           echo "Projects available: $(echo $RESPONSE | grep -o '"name":"[^"]*"' | cut -d'"' -f4)"
       
       - name: Publish to Cloudflare Pages
-        uses: cloudflare/pages-action@v2  # 更新到 v2 版本
+        uses: cloudflare/pages-action@1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
