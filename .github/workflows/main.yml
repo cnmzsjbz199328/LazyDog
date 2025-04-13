@@ -4,6 +4,10 @@ on:
   push:
     branches: [ main ]
 
+permissions:
+  contents: read
+  deployments: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -35,9 +39,7 @@ jobs:
           RESPONSE=$(curl -s -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
                 -H "Content-Type: application/json" \
                 "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects")
-          echo "Full Response: $RESPONSE"
-          echo "Projects available: $(echo $RESPONSE | grep -o '\"name\":\"[^\"]*\"' | cut -d'\"' -f4)"
-          echo "Response Success: $(echo $RESPONSE | grep -o '\"success\":[^,]*' | cut -d':' -f2)"
+          echo "Projects available: $(echo $RESPONSE | grep -o '"name":"[^"]*"' | cut -d'"' -f4)"
       
       - name: Publish to Cloudflare Pages
         uses: cloudflare/pages-action@v1.5.0
@@ -47,3 +49,4 @@ jobs:
           projectName: lazydog
           directory: build
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          createGitHubDeployment: false
