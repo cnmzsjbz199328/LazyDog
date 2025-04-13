@@ -1,0 +1,100 @@
+/* 基础布局和通用样式 */
+.leftPanel {
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.heading {
+  font-size: 1.5rem;
+    font-weight: 600;
+    color: #5c8d89;
+    letter-spacing: 1px;
+    margin: 0;
+}
+
+.heading i {
+  margin-right: 10px;
+  color: var(--primary);
+}
+
+.panelHeader {
+      justify-content: space-between;
+      display: flex;
+      align-items: center;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 2px dashed #e6d7b8;
+}
+
+.boxHeading {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: var(--dark);
+}
+
+.subHeading {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.container {
+  background: #fff9e6;
+  border-radius: 12px;
+  box-shadow: 
+    0 5px 15px rgba(0, 0, 0, 0.05),
+    0 0 0 5px rgba(255, 255, 255, 0.5),
+    0 0 0 10px rgba(255, 255, 255, 0.2);
+  padding: 25px;
+  flex: 1;
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border: 2px solid #e6d7b8;
+  background-image: 
+    linear-gradient(rgba(255, 249, 230, 0.7) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 249, 230, 0.7) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-position: -1px -1px;
+}
+
+/* 卡片装饰 - 胶带效果 */
+.container::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  width: 120px;
+  height: 30px;
+  background-color: rgba(168, 198, 108, 0.5);
+  border-radius: 5px;
+  z-index: -1;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 2px dashed #e6d7b8;
+}
+
+.iconWrapper {
+  margin-right: 15px;
+  color: #7a9e9f;
+  font-size: 1.5rem;
+}
+
+.cardHeader h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #5c8d89;
+  letter-spacing: 1px;
+  margin: 0;
+}

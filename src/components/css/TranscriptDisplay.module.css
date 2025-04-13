@@ -1,0 +1,272 @@
+/* 文本显示相关样式 */
+.currentBox,
+.fullBox {
+  margin-top: 20px;
+  width: 100%;
+}
+
+.singleLine {
+  width: 100%;
+  padding: 15px;
+  border: 1px solid #444;
+  border-radius: var(--border-radius);
+  background-color: #222;
+  font-size: 1.1rem;
+  line-height: 1.5;
+  position: relative;
+  height: auto;
+  min-height: 60px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #32CD32; /* 亮绿色文字 */
+  font-family: 'Courier New', monospace;
+  box-shadow: 0 0 8px rgba(50, 205, 50, 0.5);
+  text-shadow: 0 0 5px rgba(50, 205, 50, 0.7);
+  letter-spacing: 0.5px;
+  resize: none;
+}
+
+.multiLine {
+  width: 100%;
+  padding: 15px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  min-height: 100px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* 确保光标样式正确设置 */
+.cursor {
+  display: inline-block;
+  width: 2px; /* 更细的光标 */
+  height: 20px;
+  background-color: #5c8d89; /* 吉卜力风格的颜色 */
+  animation: blink 1s infinite;
+  vertical-align: middle;
+  margin-left: 2px;
+  position: relative;
+  top: -1px; /* 微调光标位置 */
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.rpgText {
+  display: inline-block;
+  overflow: hidden;
+  animation: typing 3.5s steps(40, end);
+  white-space: nowrap;
+  border-right: 2px solid #32CD32;
+  padding-right: 5px;
+  animation: typing 3.5s steps(40, end),
+             blink-caret .75s step-end infinite;
+}
+
+@keyframes typing {
+  from { width: 0 }
+  to { width: 100% }
+}
+
+@keyframes blink-caret {
+  from, to { border-color: transparent }
+  50% { border-color: #32CD32 }
+}
+
+.scrollContainer {
+  width: 100%;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding: 0.5rem;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  position: relative;
+  
+  /* 隐藏滚动条但保留功能 */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.scrollContainer::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.realTimeTranscript {
+  display: inline-block;
+  min-height: 2.5rem;
+  font-size: 1rem;
+  white-space: nowrap;
+  animation: scrollText 0.3s linear;
+}
+
+.liveText {
+  animation: fadeIn 0.2s ease-in;
+}
+
+.placeholderText {
+  color: #888;
+  font-style: italic;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0.7; }
+  to { opacity: 1; }
+}
+
+@keyframes scrollText {
+  from { transform: translateX(20px); opacity: 0.5; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.fullTranscriptContainer {
+  /* 移除 max-height 限制 */
+  /* max-height: 250px; */
+  display: flex;
+  flex-direction: column;
+  flex: 1;  /* 允许容器伸展填充剩余空间 */
+  overflow-y: visible; /* 不限制垂直溢出 */
+  border: 1px solid var(--light-gray);
+  border-radius: var(--border-radius);
+  margin-bottom: 20px;
+  position: relative;
+  width: 100%;
+}
+
+/* 自定义滚动条样式 */
+.fullTranscriptContainer::-webkit-scrollbar {
+  width: 8px;
+}
+
+.fullTranscriptContainer::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.fullTranscriptContainer::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.fullTranscriptContainer::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.transcriptHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.currentTranscriptContainer {
+  margin-bottom: 20px;
+}
+
+/* 为当前语音添加平滑过渡效果 */
+.currentTranscript {
+  width: 100%;
+  border-radius: var(--border-radius);
+  background-color: rgba(255, 255, 255, 0.5);
+  font-size: 1rem;
+  line-height: 1.5;
+  position: relative;
+  height: 60px; /* 固定高度 */
+  min-height: 60px;
+  color: #495057;
+  border: 1px dashed var(--border-color);
+  padding: 15px;
+  margin-bottom: 20px;
+  transition: all 0.2s ease;
+  white-space: nowrap; /* 防止文本换行 */
+  overflow-x: auto; /* 启用水平滚动 */
+  overflow-y: hidden; /* 禁用垂直滚动 */
+  
+  /* 隐藏滚动条但保留功能 */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* 隐藏 WebKit/Chrome 滚动条 */
+.currentTranscript::-webkit-scrollbar {
+  display: none;
+}
+
+.currentTranscript.active {
+  animation: fadeIn 0.2s ease-in;
+  border-color: #5c8d89;
+  box-shadow: 0 0 5px rgba(92, 141, 137, 0.3);
+}
+
+/* 确保全部文本区域有固定高度和垂直滚动 */
+.fullTranscript {
+  width: 100%;
+  padding: 15px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #495057;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  border: 1px dashed var(--border-color);
+  margin-bottom: 0; /* 移除底部边距 */
+  
+  /* 允许伸展填充容器 */
+  flex: 1;
+  min-height: 150px; /* 设置最小高度而非固定高度 */
+  height: auto; /* 自动高度 */
+  overflow-y: auto; /* 启用垂直滚动 */
+}
+
+/* 吉卜力风格的滚动条 - 特别为fullTranscript定制 */
+.fullTranscript::-webkit-scrollbar {
+  width: 8px;
+}
+
+.fullTranscript::-webkit-scrollbar-track {
+  background: rgba(230, 215, 184, 0.3);
+  border-radius: 8px;
+}
+
+.fullTranscript::-webkit-scrollbar-thumb {
+  background: rgba(122, 158, 159, 0.5);
+  border-radius: 8px;
+  border: 2px solid rgba(230, 215, 184, 0.3);
+}
+
+.fullTranscript::-webkit-scrollbar-thumb:hover {
+  background: rgba(122, 158, 159, 0.7);
+}
+
+/* 以花朵标题装饰 */
+.heading {
+  font-size: 1.2rem;
+  color: var(--primary);
+  margin-bottom: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+.heading::before {
+  content: "✿";
+  margin-right: 8px;
+  color: var(--accent);
+}
+
+.wordCount {
+  font-size: 0.9rem;
+  color: #a39081;
+  margin-bottom: 10px;
+  font-style: italic;
+}
+
+/* 文本容器，用于包装文本和光标 */
+.textWithCursor {
+  display: inline-block;
+  white-space: nowrap;
+  position: relative;
+}

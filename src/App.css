@@ -1,0 +1,299 @@
+/* App.css */
+:root {
+  --border-radius: 8px;
+  --box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  --transition: all 0.3s ease;
+}
+
+/* 基础样式重置 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Comic Sans MS', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+/* 吉卜力风格背景和整体样式 */
+body {
+  background-color: #f5f0e1;
+  color: #5d534a;
+  line-height: 1.6;
+  position: relative;
+  overflow-x: hidden;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+  height: 100vh;
+  overflow: hidden; /* 移除这个限制 */
+}
+
+/* 添加这个在全局CSS文件中 */
+@media (max-width: 768px) {
+  body {
+    height: auto;
+    overflow-y: auto; /* 允许垂直滚动 */
+  }
+}
+
+/* 装饰元素 - 云朵 */
+body::before {
+  content: "";
+  position: fixed;
+  top: 15%;
+  left: 5%;
+  width: 150px;
+  height: 80px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  box-shadow: 
+    100px -20px 0 rgba(255, 255, 255, 0.5),
+    200px 20px 0 rgba(255, 255, 255, 0.3),
+    300px -30px 0 rgba(255, 255, 255, 0.6);
+  z-index: -1;
+}
+
+/* 装饰元素 - 小草 */
+body::after {
+  content: "";
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background-image: 
+    radial-gradient(circle at 10% 100%, transparent 20%, #a8c66c 20%, #a8c66c 22%, transparent 22%),
+    radial-gradient(circle at 20% 100%, transparent 24%, #8eb14f 24%, #8eb14f 28%, transparent 28%),
+    radial-gradient(circle at 30% 100%, transparent 22%, #a8c66c 22%, #a8c66c 26%, transparent 26%),
+    radial-gradient(circle at 40% 100%, transparent 25%, #8eb14f 25%, #8eb14f 27%, transparent 27%),
+    radial-gradient(circle at 50% 100%, transparent 23%, #a8c66c 23%, #a8c66c 28%, transparent 28%),
+    radial-gradient(circle at 60% 100%, transparent 24%, #8eb14f 24%, #8eb14f 27%, transparent 27%),
+    radial-gradient(circle at 70% 100%, transparent 22%, #a8c66c 22%, #a8c66c 26%, transparent 26%),
+    radial-gradient(circle at 80% 100%, transparent 25%, #8eb14f 25%, #8eb14f 28%, transparent 28%),
+    radial-gradient(circle at 90% 100%, transparent 23%, #a8c66c 23%, #a8c66c 27%, transparent 27%);
+  background-size: 120px 80px;
+  background-repeat: repeat-x;
+  z-index: -1;
+  opacity: 0.7;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  height: calc(100vh - 160px); /* 这里限制了高度 */
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto 1fr; /* 定义行高 */
+  gap: 20px;
+  overflow: hidden; /* 这里禁止了滚动 */
+}
+
+@media (max-width: 1200px) {
+  .container {
+    grid-template-columns: 1fr 2fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    height: auto; /* 改为自适应高度 */
+    overflow: visible; /* 允许内容溢出并滚动 */
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.leftPanel,
+.rightPanel {
+  flex: 1;
+  min-width: 300px; /* 最小宽度，防止过窄 */
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  margin-bottom: 20px;
+  transition: var(--transition);
+  overflow: hidden; /* 修改这个属性 */
+}
+
+@media (max-width: 768px) {
+  .leftPanel,
+  .rightPanel {
+    overflow: visible; /* 在小屏幕上允许内容溢出 */
+    width: 100%;
+  }
+}
+
+.leftPanel:hover,
+.rightPanel:hover {
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.container > div:first-child {
+  overflow-y: auto; /* 只有第一个子元素(ContentDisplay)可滚动 */
+  max-height: 100%; 
+}
+
+/* 为右侧面板添加的样式 */
+.rightPanel {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 确保OptimizedText和MindMap在平板和手机上都能正确显示 */
+@media (max-width: 768px) {
+  .rightPanel {
+    grid-row: 3 / span 1;
+  }
+}
+
+.header {
+  text-align: center;
+  position: relative;
+}
+
+.header h1 {
+  font-size: 3rem;
+  color: #5c8d89;
+  margin-bottom: 10px;
+  font-weight: 700;
+  text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.7);
+  letter-spacing: 2px;
+  position: relative;
+  display: inline-block;
+}
+
+/* 龙猫耳朵装饰 */
+.header h1::before,
+.header h1::after {
+  content: "";
+  position: absolute;
+  top: -15px;
+  width: 25px;
+  height: 40px;
+  background-color: #5c8d89;
+  border-radius: 50% 50% 0 0;
+  z-index: -1;
+}
+
+.header h1::before {
+  left: -15px;
+  transform: rotate(-20deg);
+}
+
+.header h1::after {
+  right: -15px;
+  transform: rotate(20deg);
+}
+
+.header p {
+  font-size: 1.1rem;
+  color: #7a9e9f;
+  font-style: italic;
+}
+
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  font-size: 0.9rem;
+}
+
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* 主内容区域 */
+.main-content {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .main-content {
+    flex-direction: column;
+    flex-wrap: nowrap; /* 确保不换行 */
+    gap: 15px; /* 减小间距 */
+  }
+  
+  .card {
+    min-width: 100%;
+    margin-bottom: 15px;
+  }
+}
+
+/* 吉卜力风格的滚动条 */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(230, 215, 184, 0.3);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(122, 158, 159, 0.5);
+  border-radius: 10px;
+  border: 3px solid rgba(230, 215, 184, 0.3);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(122, 158, 159, 0.7);
+}
+
+.speechPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 300px;
+  background-color: #fff9e6;
+  border-radius: 12px;
+  box-shadow: 
+    0 5px 15px rgba(0, 0, 0, 0.05),
+    0 0 0 5px rgba(255, 255, 255, 0.5),
+    0 0 0 10px rgba(255, 255, 255, 0.2);
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+  position: relative;
+  border: 2px solid #e6d7b8;
+  background-image: 
+    linear-gradient(rgba(255, 249, 230, 0.7) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 249, 230, 0.7) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-position: -1px -1px;
+  padding: 25px;
+  height: auto; /* 允许高度自动调整 */
+  overflow: visible; /* 允许内容溢出和滚动 */
+}
+
+/* 卡片装饰 - 胶带效果 */
+.speechPanel::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  width: 120px;
+  height: 30px;
+  background-color: rgba(168, 198, 108, 0.5);
+  border-radius: 5px;
+  z-index: -1;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .speechPanel {
+    width: 100%;
+    overflow-y: visible;
+  }
+}

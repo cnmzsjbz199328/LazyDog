@@ -1,0 +1,12 @@
+name = "lazydog"
+compatibility_date = "2023-05-18"
+
+[build]
+command = "npm run build"
+output_dir = "build"
+
+[env.production]
+# 生产环境配置
+
+[env.preview]
+# 预览环境配置
