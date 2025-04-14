@@ -76,30 +76,125 @@ body::after {
   opacity: 0.7;
 }
 
+/* 替换现有的 .container 相关样式 */
+
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  position: relative;
-  height: calc(100vh - 160px); /* 这里限制了高度 */
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  grid-template-rows: auto 1fr; /* 定义行高 */
+  padding: 0 10px;
+  display: flex;
+  flex-wrap: wrap;
   gap: 20px;
-  overflow: hidden; /* 这里禁止了滚动 */
+  height: calc(100vh - 160px);
+  overflow: auto;
 }
 
+/* 三个主要面板的基础样式 */
+.speechPanel, .centerPanel, .rightPanel {
+  display: flex;
+  flex-direction: column;
+  min-height: 500px;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+  border-radius: 12px;
+}
+
+/* 默认宽度分配 */
+.speechPanel {
+  flex: 1 1 300px; /* 左侧面板 - 语音识别 */
+  background-color: #fff9e6;
+  border: 2px solid #e6d7b8;
+  background-image: 
+    linear-gradient(rgba(255, 249, 230, 0.7) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 249, 230, 0.7) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-position: -1px -1px;
+  padding: 25px;
+  box-shadow: 
+    0 5px 15px rgba(0, 0, 0, 0.05),
+    0 0 0 5px rgba(255, 255, 255, 0.5),
+    0 0 0 10px rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: visible;
+}
+
+.centerPanel {
+  flex: 1 1 300px; /* 中间面板 - 内容显示 */
+  background-color: white;
+  box-shadow: var(--box-shadow);
+  overflow: hidden;
+}
+
+.rightPanel {
+  flex: 1 1 300px; /* 右侧面板 - 优化结果 */
+  background-color: white;
+  box-shadow: var(--box-shadow);
+  overflow: hidden;
+}
+
+/* 中等屏幕 (768px - 1200px) */
 @media (max-width: 1200px) {
   .container {
-    grid-template-columns: 1fr 2fr;
+    justify-content: space-between;
+  }
+
+  .speechPanel {
+    flex: 1 1 100%; /* 语音识别面板占据整行 */
+    order: 1;
+  }
+
+  .centerPanel {
+    flex: 1 1 calc(50% - 20px); /* 中间面板占一半宽度 */
+    order: 2;
+  }
+
+  .rightPanel {
+    flex: 1 1 calc(50% - 20px); /* 右侧面板占一半宽度 */
+    order: 3;
   }
 }
 
+/* 小屏幕 (768px 以下) */
 @media (max-width: 768px) {
   .container {
-    height: auto; /* 改为自适应高度 */
-    overflow: visible; /* 允许内容溢出并滚动 */
-    display: flex;
+    height: auto;
     flex-direction: column;
+  }
+
+  .speechPanel, .centerPanel, .rightPanel {
+    flex: 1 1 100%; /* 所有面板都占满宽度 */
+    min-height: 500px;
+  }
+  
+  .speechPanel {
+    overflow-y: visible;
+  }
+}
+
+/* 卡片装饰 - 胶带效果 */
+.speechPanel::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  width: 120px;
+  height: 30px;
+  background-color: rgba(168, 198, 108, 0.5);
+  border-radius: 5px;
+  z-index: -1;
+}
+
+/* 悬停效果 */
+.centerPanel:hover, .rightPanel:hover {
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+/* iPad 尺寸特定优化 */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .container {
+    padding: 0 15px;
   }
 }
 
@@ -127,24 +222,6 @@ body::after {
 .rightPanel:hover {
   box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
-}
-
-.container > div:first-child {
-  overflow-y: auto; /* 只有第一个子元素(ContentDisplay)可滚动 */
-  max-height: 100%; 
-}
-
-/* 为右侧面板添加的样式 */
-.rightPanel {
-  display: flex;
-  flex-direction: column;
-}
-
-/* 确保OptimizedText和MindMap在平板和手机上都能正确显示 */
-@media (max-width: 768px) {
-  .rightPanel {
-    grid-row: 3 / span 1;
-  }
 }
 
 .header {
@@ -251,49 +328,28 @@ button:disabled {
   background: rgba(122, 158, 159, 0.7);
 }
 
-.speechPanel {
-  flex: 1;
+/* 添加到文件末尾 */
+
+/* 确保面板高度合理 */
+.leftPanel, .speechPanel, .rightPanel {
+  min-height: 500px;
   display: flex;
   flex-direction: column;
-  min-width: 300px;
-  background-color: #fff9e6;
-  border-radius: 12px;
-  box-shadow: 
-    0 5px 15px rgba(0, 0, 0, 0.05),
-    0 0 0 5px rgba(255, 255, 255, 0.5),
-    0 0 0 10px rgba(255, 255, 255, 0.2);
-  margin-bottom: 20px;
-  transition: all 0.3s ease;
-  position: relative;
-  border: 2px solid #e6d7b8;
-  background-image: 
-    linear-gradient(rgba(255, 249, 230, 0.7) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 249, 230, 0.7) 1px, transparent 1px);
-  background-size: 20px 20px;
-  background-position: -1px -1px;
-  padding: 25px;
-  height: auto; /* 允许高度自动调整 */
-  overflow: visible; /* 允许内容溢出和滚动 */
 }
 
-/* 卡片装饰 - 胶带效果 */
-.speechPanel::before {
-  content: "";
-  position: absolute;
-  top: -10px;
-  left: 50%;
-  transform: translateX(-50%) rotate(-2deg);
-  width: 120px;
-  height: 30px;
-  background-color: rgba(168, 198, 108, 0.5);
-  border-radius: 5px;
-  z-index: -1;
+/* 优化面板内部滚动行为 */
+.leftPanel {
+  overflow-y: auto;
+  max-height: calc(100vh - 200px);
 }
 
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .speechPanel {
-    width: 100%;
-    overflow-y: visible;
+/* 针对 iPad 尺寸的特定优化 */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .container {
+    padding: 0 15px;
+  }
+  
+  .rightPanel {
+    margin-top: 20px; /* 确保与上方元素有足够间距 */
   }
 }

@@ -16,6 +16,7 @@ const useSpeechRecognition = (handleOptimization, wordThreshold = 200) => {
   const optimizationInProgressRef = useRef(false);
   const accumulatedTranscriptRef = useRef('');
   const isListeningRef = useRef(false);
+  const recognitionActiveRef = useRef(false);
   
   // 使用ref来存储阈值，这样不需要重新创建事件处理函数
   const wordThresholdRef = useRef(wordThreshold);
@@ -35,23 +36,22 @@ const useSpeechRecognition = (handleOptimization, wordThreshold = 200) => {
   const handleAbortedError = useCallback(() => {
     console.log('Recognition was aborted, attempting to recover...');
     
+    // 标记识别已停止
+    recognitionActiveRef.current = false;
+    
     // 避免立即重启，给一点延迟
     setTimeout(() => {
-      if (isListeningRef.current && recognitionRef.current) {
+      if (isListeningRef.current && recognitionRef.current && !recognitionActiveRef.current) {
         try {
-          recognitionRef.current.stop();
-          setTimeout(() => {
-            if (isListeningRef.current) {
-              recognitionRef.current.start();
-              console.log('Successfully restarted after abort');
-            }
-          }, 500);
+          recognitionRef.current.start();
+          recognitionActiveRef.current = true;
+          console.log('Successfully restarted after abort');
         } catch (e) {
           console.error('Failed to restart after abort:', e);
           setIsListening(false);
         }
       }
-    }, 1000);
+    }, 500);
   }, []);
 
   // 初始化和处理语音识别逻辑
@@ -135,16 +135,27 @@ const useSpeechRecognition = (handleOptimization, wordThreshold = 200) => {
       }
     };
 
+    recognitionInstance.onstart = () => {
+      console.log('Recognition started');
+      recognitionActiveRef.current = true;
+    };
+
     recognitionInstance.onend = () => {
       console.log('Recognition ended, isListening:', isListeningRef.current);
+      
+      // 标记识别已停止
+      recognitionActiveRef.current = false;
       
       // 使用ref检查当前状态，避免闭包问题
       if (isListeningRef.current) {
         // 给一个短暂延迟再重启，避免连续快速重启
         setTimeout(() => {
           try {
-            recognitionInstance.start();
-            console.log('Recognition restarted');
+            // 只有当识别确实已停止且用户仍希望录音时才重启
+            if (isListeningRef.current && !recognitionActiveRef.current) {
+              recognitionInstance.start();
+              console.log('Recognition restarted');
+            }
           } catch (e) {
             console.error('Failed to restart recognition:', e);
             setIsListening(false);
@@ -177,24 +188,35 @@ const useSpeechRecognition = (handleOptimization, wordThreshold = 200) => {
     if (!recognitionRef.current) return; // 确保实例已初始化
     
     if (isListening) {
-      // 尝试启动录音
-      try {
-        recognitionRef.current.start();
-        console.log('Started recognition');
-      } catch (err) {
-        console.error('Failed to start recognition:', err);
-        // 如果是"already started"错误，不需要重置状态
-        if (err.message !== 'Failed to execute \'start\' on \'SpeechRecognition\': recognition has already started.') {
-          setIsListening(false);
+      // 只有当识别确实已停止时才尝试启动
+      if (!recognitionActiveRef.current) {
+        try {
+          recognitionRef.current.start();
+          console.log('Started recognition');
+        } catch (err) {
+          console.error('Failed to start recognition:', err);
+          // 如果是"already started"错误，记录但不重置状态
+          if (err.message.includes('already started')) {
+            console.log('Recognition was already active - updating state');
+            recognitionActiveRef.current = true;
+          } else {
+            setIsListening(false);
+          }
         }
+      } else {
+        console.log('Recognition already active, skipping start');
       }
     } else {
       // 尝试停止录音
-      try {
-        recognitionRef.current.stop();
-        console.log('Stopped recognition');
-      } catch (err) {
-        console.error('Failed to stop recognition:', err);
+      if (recognitionActiveRef.current) {
+        try {
+          recognitionRef.current.stop();
+          console.log('Stopped recognition');
+        } catch (err) {
+          console.error('Failed to stop recognition:', err);
+        }
+      } else {
+        console.log('Recognition already stopped, skipping stop');
       }
     }
   }, [isListening]);

@@ -1,7 +1,7 @@
 import { callAI, formatResponse } from '../services/aiManagement';
 import { saveContentToLocalStorage } from './write';
 
-export const optimizeText = async (text, setOptimizedText, apiType, backgroundInfo = '') => {
+export const optimizeText = async (text, setOptimizedText, backgroundInfo = '') => {
   // 验证输入文本
   if (!text || text.trim().length === 0) {
     console.warn('Empty text provided to optimizeText, operation cancelled');
@@ -17,11 +17,13 @@ export const optimizeText = async (text, setOptimizedText, apiType, backgroundIn
   }
   
   try {
-    // 调用 AI API
-    const response = await callAI(promptText, apiType);
+    // 调用 AI API - 让 aiManagement 负责决定使用哪个 API
+    const response = await callAI(promptText);
     
-    // 格式化响应
-    const formattedResponse = formatResponse(response, apiType);
+    // 由于 aiManagement 负责 API 选择，我们应该从它获取使用的 API 类型
+    // 修改 callAI 以返回 [response, usedApiType] 或在返回对象中包含 apiType
+    const formattedResponse = formatResponse(response); // 不再需要传递 apiType 参数
+    
     const optimizedText = formattedResponse.text
       .replace(/```json/g, '')
       .replace(/```/g, '')

@@ -85,10 +85,9 @@ const getContextualInfo = () => {
  * @param {string} content - Content text to process
  * @param {string} mainPoint - Main point (used as root node)
  * @param {function} setProcessingState - Function to update processing state
- * @param {string} apiType - API type to use
  * @returns {Promise<string>} - Returns the generated mind map code
  */
-export const generateMindMap = async (content, mainPoint, setProcessingState, apiType = 'gemini') => {
+export const generateMindMap = async (content, mainPoint, setProcessingState) => {
   // 设置处理状态
   if (setProcessingState) {
     setProcessingState(true);
@@ -144,75 +143,49 @@ mindmap
     Key Concept 2
     Key Concept 3`;
 
-  // 2. Add retry logic and API rotation
-  let retryCount = 0;
-  const maxRetries = 3;
-  const apiTypes = ['mistral_pixtral', 'gemini', 'glm'];  // API list ordered by priority
-  
-  // Retry loop
-  while (retryCount <= maxRetries) {
-    try {
-      // Select API based on retry count
-      const currentApiType = retryCount === 0 ? apiType : apiTypes[retryCount % apiTypes.length];
-      
-      console.log(`Calling AI API (${currentApiType}) to generate mind map... (Attempt ${retryCount+1}/${maxRetries+1})`);
-      const response = await callAI(promptText, currentApiType);
-      
-      // Format response
-      const formattedResponse = formatResponse(response, currentApiType);
-      let mindMapCode = formattedResponse.text.trim();
-      
-      // Ensure code begins with mindmap
-      if (!mindMapCode.startsWith('mindmap')) {
-        const match = mindMapCode.match(/```(?:mermaid)?\s*(mindmap[\s\S]+?)```/);
-        if (match) {
-          mindMapCode = match[1].trim();
-        } else {
-          throw new Error("AI response is not a valid mind map format");
-        }
-      }
-      
-      // Save generated mind map code to local storage
-      saveMindMapToLocalStorage(mindMapCode, mainPoint);
-      
-      // 3. Add to cache to reduce future calls
-      saveMindMapToCache(content, mainPoint, mindMapCode);
-      
-      console.log("Generated mind map code:", mindMapCode);
-      return mindMapCode;
-    } catch (error) {
-      console.error(`Mind map generation failed (attempt ${retryCount+1}/${maxRetries+1}):`, error);
-      
-      // If rate limit error (429), retry
-      if (error.message.includes('429')) {
-        retryCount++;
-        
-        if (retryCount <= maxRetries) {
-          // Calculate exponential backoff delay
-          const delay = Math.min(1000 * Math.pow(2, retryCount), 8000);
-          console.log(`Rate limited. Retrying in ${delay/1000} seconds with different API...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
-          continue;
-        }
+  try {
+    // 使用 callAI 并让服务层决定使用哪个 API
+    const response = await callAI(promptText);
+    
+    // 服务层应返回使用的 API 信息，或者 formatResponse 不再需要 apiType 参数
+    const formattedResponse = formatResponse(response);
+    
+    let mindMapCode = formattedResponse.text.trim();
+    
+    // Ensure code begins with mindmap
+    if (!mindMapCode.startsWith('mindmap')) {
+      const match = mindMapCode.match(/```(?:mermaid)?\s*(mindmap[\s\S]+?)```/);
+      if (match) {
+        mindMapCode = match[1].trim();
       } else {
-        // Other errors, fail directly
-        break;
+        throw new Error("AI response is not a valid mind map format");
       }
     }
-  }
-  
-  // All attempts failed, return simple error mind map
-  console.error('All mind map generation attempts failed');
-  
-  // 4. Reset processing state
-  if (setProcessingState) {
-    setProcessingState(false);
-  }
-  
-  return `mindmap
+    
+    // Save generated mind map code to local storage
+    saveMindMapToLocalStorage(mindMapCode, mainPoint);
+    
+    // 3. Add to cache to reduce future calls
+    saveMindMapToCache(content, mainPoint, mindMapCode);
+    
+    console.log("Generated mind map code:", mindMapCode);
+    return mindMapCode;
+  } catch (error) {
+    console.error('Mind map generation failed:', error);
+    
+    // All attempts failed, return simple error mind map
+    console.error('All mind map generation attempts failed');
+    
+    // 4. Reset processing state
+    if (setProcessingState) {
+      setProcessingState(false);
+    }
+    
+    return `mindmap
   root((${cleanText(mainPoint || 'Content Overview')}))
     Unable to process
       Please try again later`;
+  }
 };
 
 /**

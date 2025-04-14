@@ -1,4 +1,4 @@
-import { GLM_CONFIG, GEMINI_CONFIG, MISTRAL_CONFIG, DEFAULT_API, API_TYPES } from '../config/apiConfig';
+import { GLM_CONFIG, GEMINI_CONFIG, MISTRAL_CONFIG, API_TYPES, DEFAULT_API } from '../config/apiConfig';
 
 /**
  * Unified AI API Management System
@@ -19,69 +19,80 @@ export const getDefaultAPI = () => {
 };
 
 /**
- * Call AI API with a unified interface
- * @param {string} text - The prompt text to send to the AI
- * @param {string} apiType - Which API to use. If not provided, DEFAULT_API will be used.
- * @param {object} options - Additional options to configure the request
- * @returns {Promise} - Promise with the API response
+ * 调用 AI API 的统一接口
+ * @param {string} text - 发送给 AI 的提示文本
+ * @param {string|null} apiType - 使用哪种 API，如果未提供将使用内部逻辑决定
+ * @param {object} options - 请求的额外配置选项
+ * @returns {Promise} - 包含 API 响应的 Promise，响应中包含使用的 API 类型
  */
-export const callAI = async (text, apiType = DEFAULT_API, options = {}) => {
-  // Log which API is being used and why
-  if (apiType === DEFAULT_API) {
-    console.log(`Using default API (${apiType}) with prompt: ${text.substring(0, 50)}...`);
-  } else {
-    console.log(`Using specified API (${apiType}) with prompt: ${text.substring(0, 50)}...`);
+export const callAI = async (text, apiType = null, options = {}) => {
+  // 获取当前应该使用的 API 类型
+  const currentApiType = apiType || localStorage.getItem('currentApiType') || DEFAULT_API;
+  
+  // 记录使用的 API 类型和提示的前50个字符
+  console.log(`Using API (${currentApiType}) with prompt: ${text.substring(0, 50)}...`);
+  
+  // 根据选择的 API 类型调用相应的 API
+  let response;
+  switch (currentApiType.toLowerCase()) {
+    case API_TYPES.GLM:
+      response = await callGlmApi(text, options);
+      break;
+    case API_TYPES.GEMINI:
+      response = await callGeminiApi(text, options);
+      break;
+    case API_TYPES.MISTRAL:
+      response = await callMistralApi(text, false, options);
+      break;
+    case API_TYPES.MISTRAL_PIXTRAL:
+      response = await callMistralApi(text, true, options);
+      break;
+    default:
+      throw new Error(`不支持的 API 类型: ${currentApiType}`);
   }
   
-  // Select the appropriate API handler based on apiType
-  switch (apiType.toLowerCase()) {
-    case API_TYPES.GLM:
-      return callGlmApi(text, options);
-    case API_TYPES.GEMINI:
-      return callGeminiApi(text, options);
-    case API_TYPES.MISTRAL:
-      return callMistralApi(text, false, options);
-    case API_TYPES.MISTRAL_PIXTRAL:
-      return callMistralApi(text, true, options);
-    default:
-      throw new Error(`Unsupported API type: ${apiType}`);
-  }
+  // 在返回的对象中加入使用的 API 类型
+  response.usedApiType = currentApiType;
+  return response;
 };
 
 /**
  * Format the API response to a standardized structure
  * @param {object} response - The raw API response
- * @param {string} apiType - Which API the response came from
  * @returns {object} - Standardized response object
  */
-export const formatResponse = (response, apiType) => {
+export const formatResponse = (response) => {
   try {
+    // 从响应中获取使用的 API 类型
+    const apiType = response.usedApiType;
+    
+    let formattedText = '';
     if (apiType === API_TYPES.GEMINI) {
       if (response?.candidates?.[0]?.content?.parts?.[0]?.text) {
-        return {
-          text: response.candidates[0].content.parts[0].text.trim(),
-          rawResponse: response
-        };
+        formattedText = response.candidates[0].content.parts[0].text.trim();
       }
     } else if (apiType === API_TYPES.GLM) {
       if (response?.choices?.[0]?.message?.content) {
-        return {
-          text: response.choices[0].message.content.trim(),
-          rawResponse: response
-        };
+        formattedText = response.choices[0].message.content.trim();
       }
     } else if (apiType === API_TYPES.MISTRAL || apiType === API_TYPES.MISTRAL_PIXTRAL) {
       if (response?.choices?.[0]?.message?.content) {
-        return {
-          text: response.choices[0].message.content.trim(),
-          rawResponse: response
-        };
+        formattedText = response.choices[0].message.content.trim();
       }
     }
     
-    throw new Error('Unexpected API response structure');
+    if (!formattedText) {
+      throw new Error('Unexpected API response structure');
+    }
+    
+    // 返回结果中包含使用的 API 类型
+    return {
+      text: formattedText,
+      rawResponse: response,
+      apiType: apiType
+    };
   } catch (error) {
-    console.error(`Error formatting ${apiType} response:`, error);
+    console.error(`Error formatting response:`, error);
     throw error;
   }
 };

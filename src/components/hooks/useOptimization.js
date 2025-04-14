@@ -13,7 +13,8 @@ const useOptimization = (setOptimizedText, savedBackgroundRef) => {
       // 增加显式日志
       console.log('OPTIMIZATION REQUEST WITH BACKGROUND:', currentBackground);
       
-      return optimizeText(text, setOptimizedText, 'mistral_pixtral', currentBackground)
+      // 移除硬编码的 'mistral_pixtral'，让函数使用 localStorage 或默认值
+      return optimizeText(text, setOptimizedText, currentBackground)
         .then(result => {
           console.log('Optimization successful:', result);
           console.log('Background info used:', currentBackground ? 'Yes' : 'No');

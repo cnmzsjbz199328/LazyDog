@@ -4,6 +4,7 @@ import OptimizedText from './components/OptimizedText';
 import ContentDisplay from './components/ContentDisplay';
 import MindMap from './components/MindMap';
 import { BackgroundProvider } from './context/BackgroundContext';
+import { ApiProvider } from './context/ApiContext';
 import './App.css';
 
 function App() {
@@ -26,32 +27,34 @@ function App() {
   }, [optimizedText]);
 
   return (
-    <BackgroundProvider>
-      <div className="App">
-        <div className="header">
-          <h1>LazyDog</h1>
-        </div>
-        
-        <div className="container">
-          <ContentDisplay />
-          
-          {/* 添加新的样式包装 */}
-          <div className="speechPanel">
-            <SpeechRecognition setOptimizedText={setOptimizedText} />
+    <ApiProvider>
+      <BackgroundProvider>
+        <div className="App">
+          <div className="header">
+            <h1>LazyDog</h1>
           </div>
-          
-          <div className="rightPanel">
-            <OptimizedText optimizedText={optimizedText} />
+
+          <div className="container">
+            <div className="speechPanel">
+              <SpeechRecognition setOptimizedText={setOptimizedText} />
+            </div>
             
-            {/* Always show MindMap component with either default welcome content or parsed content */}
-            <MindMap 
-              content={parsedContent.content} 
-              mainPoint={parsedContent.mainPoint}
-            />
+            <div className="centerPanel">
+              <ContentDisplay />
+            </div>
+            
+            <div className="rightPanel">
+              <OptimizedText optimizedText={optimizedText} />
+              
+              <MindMap 
+                content={parsedContent.content} 
+                mainPoint={parsedContent.mainPoint}
+              />
+            </div>
           </div>
         </div>
-      </div>
-    </BackgroundProvider>
+      </BackgroundProvider>
+    </ApiProvider>
   );
 }
 
