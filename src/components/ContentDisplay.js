@@ -176,7 +176,8 @@ const ContentDisplay = () => {
               </div>
               {expandedIndex === index && (
                 <div className={styles.content}>
-                  <p>{item.content || 'No content available'}</p>
+                  {/* 使用适当的文本处理确保长内容能正确显示 */}
+                  <p style={{wordBreak: 'break-word'}}>{item.content || 'No content available'}</p>
                 </div>
               )}
             </li>

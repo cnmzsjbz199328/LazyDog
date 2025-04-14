@@ -160,6 +160,7 @@
   transform: rotate(90deg);
 }
 
+/* 修改content类，确保文本正确换行 */
 .content {
   padding: 15px;
   margin-top: 5px;
@@ -168,6 +169,10 @@
   color: #495057;
   font-size: 0.95rem;
   line-height: 1.7;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  max-width: 100%;
 }
 
 /* 添加更新指示器样式 */
@@ -218,4 +223,96 @@
   font-style: italic;
   border: 1px dashed #d1c3a6;
   min-height: 200px;
+}
+
+/* 在文件末尾添加移动设备的媒体查询 */
+@media (max-width: 768px) {
+  .container {
+    padding: 15px;
+    min-width: auto;
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+  }
+  
+  .toolbar {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .clearButton, 
+  .exportButton {
+    width: 100%;
+    justify-content: center;
+    padding: 8px;
+    font-size: 0.85rem;
+  }
+  
+  .list {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  
+  .item {
+    width: 100%;
+    overflow-x: hidden;
+  }
+  
+  .mainPoint {
+    font-size: 0.9rem;
+    padding: 6px 0;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .content {
+    padding: 10px;
+    font-size: 0.85rem;
+  }
+
+  .heading {
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+  }
+  
+  .heading i {
+    font-size: 1.3rem;
+    margin-right: 10px;
+  }
+  
+  .updateIndicator {
+    display: none; /* 在手机上隐藏时间戳以节省空间 */
+  }
+}
+
+/* 专门针对iPhone的超小屏幕 */
+@media (max-width: 428px) {
+  .container {
+    padding: 12px;
+  }
+  
+  .mainPoint {
+    font-size: 0.85rem;
+  }
+  
+  .content {
+    font-size: 0.8rem;
+    line-height: 1.5;
+    padding: 8px;
+  }
+  
+  /* 减小工具栏按钮的大小 */
+  .clearButton, 
+  .exportButton {
+    padding: 6px;
+    font-size: 0.8rem;
+  }
+  
+  /* 确保历史记录列表不超出屏幕 */
+  .list {
+    padding: 0;
+    overflow-x: hidden;
+  }
 }

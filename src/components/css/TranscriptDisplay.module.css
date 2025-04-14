@@ -168,8 +168,7 @@
 /* 为当前语音添加平滑过渡效果 */
 .currentTranscript {
   width: 100%;
-  border-radius: var(--border-radius);
-  background-color: rgba(255, 255, 255, 0.5);
+  padding: 15px;
   font-size: 1rem;
   line-height: 1.5;
   position: relative;
@@ -177,12 +176,13 @@
   min-height: 60px;
   color: #495057;
   border: 1px dashed var(--border-color);
-  padding: 15px;
   margin-bottom: 20px;
   transition: all 0.2s ease;
-  white-space: nowrap; /* 防止文本换行 */
-  overflow-x: auto; /* 启用水平滚动 */
-  overflow-y: hidden; /* 禁用垂直滚动 */
+  white-space: pre-wrap; /* 改为pre-wrap允许文本换行 */
+  word-break: break-word; /* 允许单词在任何字符处换行 */
+  overflow-x: hidden; /* 隐藏水平滚动条 */
+  overflow-y: auto; /* 需要时显示垂直滚动条 */
+  max-width: 100%; /* 确保不超过父容器宽度 */
   
   /* 隐藏滚动条但保留功能 */
   scrollbar-width: none; /* Firefox */
@@ -219,6 +219,7 @@
   min-height: 150px; /* 设置最小高度而非固定高度 */
   height: auto; /* 自动高度 */
   overflow-y: auto; /* 启用垂直滚动 */
+  max-width: 100%;
 }
 
 /* 吉卜力风格的滚动条 - 特别为fullTranscript定制 */

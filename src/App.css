@@ -169,6 +169,24 @@ body::after {
   .speechPanel {
     overflow-y: visible;
   }
+  
+  .currentTranscript, .fullTranscript {
+    font-size: 0.9rem;
+    padding: 10px;
+  }
+  
+  /* 确保容器不会水平溢出 */
+  .container, .speechPanel, .centerPanel, .rightPanel {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  
+  /* 为iPhone优化文本显示 */
+  .textWithCursor {
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+  }
 }
 
 /* 卡片装饰 - 胶带效果 */
