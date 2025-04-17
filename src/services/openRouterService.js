@@ -2,16 +2,16 @@
  * OpenRouter API服务
  * 负责与OpenRouter API交互，包括模型回退机制
  */
-import { OPENROUTER_CONFIG } from '../config/apiConfig';
 
 /**
  * 调用OpenRouter API，支持模型回退机制
  * @param {string} text - 发送给API的文本
  * @param {object} options - 额外选项
+ * @param {object} config - OpenRouter配置对象
  * @returns {Promise<object>} - API响应
  */
-export async function callOpenRouterWithFallback(text, options = {}) {
-  const { apiKey, endpoint, model, fallbackModels, siteUrl, siteName, defaultParams } = OPENROUTER_CONFIG;
+export async function callOpenRouterWithFallback(text, options = {}, config) {
+  const { apiKey, endpoint, model, fallbackModels, siteUrl, siteName, defaultParams } = config;
   
   // 构建要尝试的模型列表
   let modelsToTry = [model];
