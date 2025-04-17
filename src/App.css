@@ -99,7 +99,7 @@ body::after {
   border-radius: 12px;
 }
 
-/* 默认宽度分配 */
+/* 修改父容器相关样式 */
 .speechPanel {
   flex: 1 1 300px; /* 左侧面板 - 语音识别 */
   background-color: #fff9e6;
@@ -115,7 +115,9 @@ body::after {
     0 0 0 5px rgba(255, 255, 255, 0.5),
     0 0 0 10px rgba(255, 255, 255, 0.2);
   position: relative;
-  overflow: visible;
+  overflow-x: hidden; /* 防止水平扩展 */
+  max-width: 100%; /* 确保不超过父容器 */
+  width: 100%; /* 设置明确的宽度 */
 }
 
 .centerPanel {

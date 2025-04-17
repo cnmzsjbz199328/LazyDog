@@ -36,13 +36,35 @@ export const MISTRAL_CONFIG = {
   }
 };
 
+// OpenRouter API Configuration
+export const OPENROUTER_CONFIG = {
+  apiKey: process.env.REACT_APP_OPENROUTER_API_KEY,
+  endpoint: 'https://openrouter.ai/api/v1/chat/completions',
+  model: 'nvidia/llama-3.1-nemotron-ultra-253b-v1:free',
+  // 添加备用模型列表，用于当主模型失败时
+  fallbackModels: [
+    'deepseek/deepseek-r1:free',
+    'qwen/qwen-2.5-7b-instruct:free',
+    'nvidia/llama-3.3-nemotron-super-49b-v1:free',
+    'deepseek/deepseek-chat-v3-0324:free'
+  ],
+  siteUrl: 'https://lazydog-app.com', // 使用固定字符串避免window.location问题
+  siteName: 'LazyDog Speech Recognition',
+  defaultParams: {
+    max_tokens: 1000,
+    temperature: 0.7,
+    stream: false // 显式禁用流式传输以避免问题
+  }
+};
+
 // Available API types
 export const API_TYPES = {
   GLM: 'glm',
   GEMINI: 'gemini', 
   MISTRAL: 'mistral',
-  MISTRAL_PIXTRAL: 'mistral_pixtral'
+  MISTRAL_PIXTRAL: 'mistral_pixtral',
+  OPENROUTER: 'openrouter'
 };
 
 // Default settings
-export const DEFAULT_API = API_TYPES.MISTRAL; // Which API to use by default
+export const DEFAULT_API = API_TYPES.OPENROUTER; // Setting OpenRouter as the default API

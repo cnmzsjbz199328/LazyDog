@@ -33,7 +33,7 @@ function OptimizedText({ optimizedText }) {
         <div className={styles.iconWrapper}>
           <i className="fas fa-file-alt"></i>
         </div>
-        <h2>Optimized Results</h2>
+        <h2>Optimization</h2>
       </div>
       
       <div className={styles.cardBody}>

@@ -136,11 +136,7 @@ const ContentDisplay = () => {
   return (
     <div className={styles.container}>
       <h2 className={styles.heading}>
-        <i className="fas fa-history"></i> History Records
-        {/* 可选：添加一个小指示器，显示最后更新时间 */}
-        <small className={styles.updateIndicator}>
-          {data.length > 0 && <span>Last updated: {new Date().toLocaleTimeString()}</span>}
-        </small>
+        <i className="fas fa-history"></i> Records
       </h2>
       
       <div className={styles.toolbar}>

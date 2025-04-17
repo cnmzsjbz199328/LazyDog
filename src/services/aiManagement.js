@@ -1,4 +1,5 @@
 import { GLM_CONFIG, GEMINI_CONFIG, MISTRAL_CONFIG, API_TYPES, DEFAULT_API } from '../config/apiConfig';
+import { callOpenRouterWithFallback } from './openRouterService';
 
 /**
  * Unified AI API Management System
@@ -12,7 +13,7 @@ import { GLM_CONFIG, GEMINI_CONFIG, MISTRAL_CONFIG, API_TYPES, DEFAULT_API } fro
 
 /**
  * Returns the currently configured default API
- * @returns {string} - The default API ('gemini', 'glm', 'mistral', or 'mistral_pixtral')
+ * @returns {string} - The default API type
  */
 export const getDefaultAPI = () => {
   return DEFAULT_API;
@@ -47,6 +48,10 @@ export const callAI = async (text, apiType = null, options = {}) => {
     case API_TYPES.MISTRAL_PIXTRAL:
       response = await callMistralApi(text, true, options);
       break;
+    case API_TYPES.OPENROUTER:
+      // 使用专门的OpenRouter服务处理API调用和回退
+      response = await callOpenRouterWithFallback(text, options);
+      break;
     default:
       throw new Error(`不支持的 API 类型: ${currentApiType}`);
   }
@@ -63,10 +68,16 @@ export const callAI = async (text, apiType = null, options = {}) => {
  */
 export const formatResponse = (response) => {
   try {
+    // Log the entire response for debugging
+    console.log("Formatting response:", JSON.stringify(response, null, 2));
+    
     // 从响应中获取使用的 API 类型
     const apiType = response.usedApiType;
+    console.log("API type:", apiType);
     
     let formattedText = '';
+    let errorMessage = null;
+    
     if (apiType === API_TYPES.GEMINI) {
       if (response?.candidates?.[0]?.content?.parts?.[0]?.text) {
         formattedText = response.candidates[0].content.parts[0].text.trim();
@@ -79,9 +90,49 @@ export const formatResponse = (response) => {
       if (response?.choices?.[0]?.message?.content) {
         formattedText = response.choices[0].message.content.trim();
       }
+    } else if (apiType === API_TYPES.OPENROUTER) {
+      console.log("Processing OpenRouter response");
+      
+      // OpenRouter 响应使用的模型
+      if (response.usedModel) {
+        console.log("Used OpenRouter model:", response.usedModel);
+      }
+      
+      // For OpenRouter, the structure should match the OpenAI format
+      if (response?.choices && response.choices.length > 0) {
+        console.log("Found choices array with length:", response.choices.length);
+        
+        if (response.choices[0]?.message?.content) {
+          console.log("Found content in message:", response.choices[0].message.content);
+          formattedText = response.choices[0].message.content.trim();
+        } else if (response.choices[0]?.content) {
+          // Alternative structure
+          console.log("Found direct content:", response.choices[0].content);
+          formattedText = response.choices[0].content.trim();
+        } else {
+          console.log("Unexpected choice structure:", JSON.stringify(response.choices[0], null, 2));
+          if (response.choices[0]?.error) {
+            errorMessage = `OpenRouter error: ${response.choices[0].error.message || 'Unknown error'}`;
+          }
+        }
+      } else {
+        console.log("No choices array found in response");
+      }
     }
     
+    // Log the extracted text
+    console.log("Extracted text:", formattedText ? formattedText.substring(0, 50) + "..." : "NONE");
+    
     if (!formattedText) {
+      if (errorMessage) {
+        return {
+          text: "抱歉，处理您的请求时出现了问题。请稍后再试。",
+          error: errorMessage,
+          rawResponse: response,
+          apiType: apiType
+        };
+      }
+      console.error('Failed to extract text from response:', JSON.stringify(response, null, 2));
       throw new Error('Unexpected API response structure');
     }
     

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import baseStyles from './css/BaseStyles.module.css';
+import styles from './css/TranscriptDisplay.module.css'; // 导入样式
 import { useBackgroundContext } from '../context/BackgroundContext';
 import BackgroundInfo from './BackgroundInfo';
 import CurrentTranscriptBox from './speechRecognition/CurrentTranscriptBox';
@@ -39,11 +40,7 @@ function SpeechRecognition({ setOptimizedText }) {
   };
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      height: '100%' // 确保组件占满父容器高度
-    }}>
+    <div className={styles.speechRecognitionContainer}>
       <div className={baseStyles.panelHeader}>
         <h2 className={baseStyles.heading}>
           <i className="fas fa-microphone"></i> Voice Recognition
@@ -63,8 +60,7 @@ function SpeechRecognition({ setOptimizedText }) {
         transcriptKey={transcriptKey} 
       />
       
-      {/* 添加 style 使其填充剩余空间 */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '200px' }}>
+      <div className={styles.fullTranscriptWrapper}>
         <FullTranscriptBox 
           fullTranscript={fullTranscript} 
           wordCount={wordCount}

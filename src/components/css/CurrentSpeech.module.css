@@ -1,0 +1,74 @@
+/* Current Speech 样式模块 - 专门用于当前语音转录显示 */
+
+.container {
+  margin-bottom: 20px;
+  width: 100%;
+  position: relative;
+  border: 1px solid #5c8d89;
+  border-radius: var(--border-radius, 8px);
+}
+
+.transcript {
+  width: 100%;
+  padding: 15px;
+  font-size: 1rem;
+  line-height: 1.5;
+  position: relative;
+  height: 60px; /* 固定高度 */
+  min-height: 60px;
+  color: #495057;
+  border: 1px dashed var(--border-color, #d1c3a6);
+  margin-top: 10px;
+  transition: all 0.2s ease;
+  box-sizing: border-box; /* 确保内边距包含在宽度内 */
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  
+  /* 关键属性：创建一个滚动容器 */
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap; /* 保持单行显示 */
+  
+  /* 隐藏滚动条但保留功能 */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* 隐藏 WebKit/Chrome 滚动条 */
+.transcript::-webkit-scrollbar {
+  display: none;
+}
+
+/* 新增：内部文本容器 */
+.textContent {
+  display: inline-block; /* 允许文本正常流动 */
+  white-space: nowrap; /* 保持单行 */
+  position: relative; /* 相对定位用于光标 */
+  /* 不要设置宽度，让它根据内容自然延展 */
+}
+
+.active {
+  animation: fadeIn 0.2s ease-in;
+  border-color: #5c8d89;
+  box-shadow: 0 0 5px rgba(92, 141, 137, 0.3);
+}
+
+.cursor {
+  display: inline-block;
+  width: 2px; /* 细光标 */
+  height: 20px;
+  background-color: #5c8d89; /* 吉卜力风格的颜色 */
+  animation: blink 1s infinite;
+  vertical-align: middle;
+  margin-left: 2px;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0.7; }
+  to { opacity: 1; }
+}

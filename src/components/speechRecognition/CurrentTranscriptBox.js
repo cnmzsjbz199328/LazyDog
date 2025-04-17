@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import styles from '../css/TranscriptDisplay.module.css';
+import styles from '../css/CurrentSpeech.module.css';
 import baseStyles from '../css/BaseStyles.module.css';
 
 const CurrentTranscriptBox = ({ currentTranscript, transcriptKey }) => {
@@ -13,16 +13,19 @@ const CurrentTranscriptBox = ({ currentTranscript, transcriptKey }) => {
     }
   }, [currentTranscript, transcriptKey]);
 
+  // 准备显示文本
+  const displayText = currentTranscript || "No speech detected...";
+
   return (
-    <div className={styles.currentTranscriptContainer}>
+    <div className={styles.container}>
       <h3 className={baseStyles.subHeading}>Current Speech</h3>
       <div 
         ref={transcriptRef}
-        className={`${styles.currentTranscript} ${currentTranscript ? styles.active : ''}`}
-        key={transcriptKey} // 使用 key 来触发重新渲染和动画
+        className={`${styles.transcript} ${currentTranscript ? styles.active : ''}`}
+        key={transcriptKey}
       >
-        <span className={styles.textWithCursor}>
-          {currentTranscript || "No speech detected..."}
+        <span className={styles.textContent}>
+          {displayText}
           {currentTranscript && <span className={styles.cursor}></span>}
         </span>
       </div>

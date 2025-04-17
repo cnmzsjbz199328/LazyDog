@@ -37,24 +37,6 @@
   word-break: break-word;
 }
 
-/* 确保光标样式正确设置 */
-.cursor {
-  display: inline-block;
-  width: 2px; /* 更细的光标 */
-  height: 20px;
-  background-color: #5c8d89; /* 吉卜力风格的颜色 */
-  animation: blink 1s infinite;
-  vertical-align: middle;
-  margin-left: 2px;
-  position: relative;
-  top: -1px; /* 微调光标位置 */
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
 .rpgText {
   display: inline-block;
   overflow: hidden;
@@ -121,37 +103,19 @@
   to { transform: translateX(0); opacity: 1; }
 }
 
+/* 修复父容器 */
 .fullTranscriptContainer {
-  /* 移除 max-height 限制 */
-  /* max-height: 250px; */
   display: flex;
   flex-direction: column;
   flex: 1;  /* 允许容器伸展填充剩余空间 */
-  overflow-y: visible; /* 不限制垂直溢出 */
-  border: 1px solid var(--light-gray);
-  border-radius: var(--border-radius);
-  margin-bottom: 20px;
+  overflow: hidden; /* 更改为 hidden 避免整体溢出 */
+  border: 1px solid var(--border-color, #d1c3a6);
+  border-radius: var(--border-radius, 8px);
   position: relative;
   width: 100%;
-}
-
-/* 自定义滚动条样式 */
-.fullTranscriptContainer::-webkit-scrollbar {
-  width: 8px;
-}
-
-.fullTranscriptContainer::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.fullTranscriptContainer::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
-}
-
-.fullTranscriptContainer::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  min-height: 200px; /* 添加最小高度确保容器有足够空间 */
+  max-height: 400px; /* 确保有固定的最大高度而不是相对值 */
+  background-color: rgba(255, 255, 255, 0.2); /* 轻微的背景以区分容器 */
 }
 
 .transcriptHeader {
@@ -159,45 +123,7 @@
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 10px;
-}
-
-.currentTranscriptContainer {
-  margin-bottom: 20px;
-}
-
-/* 为当前语音添加平滑过渡效果 */
-.currentTranscript {
-  width: 100%;
-  padding: 15px;
-  font-size: 1rem;
-  line-height: 1.5;
-  position: relative;
-  height: 60px; /* 固定高度 */
-  min-height: 60px;
-  color: #495057;
-  border: 1px dashed var(--border-color);
-  margin-bottom: 20px;
-  transition: all 0.2s ease;
-  white-space: pre-wrap; /* 改为pre-wrap允许文本换行 */
-  word-break: break-word; /* 允许单词在任何字符处换行 */
-  overflow-x: hidden; /* 隐藏水平滚动条 */
-  overflow-y: auto; /* 需要时显示垂直滚动条 */
-  max-width: 100%; /* 确保不超过父容器宽度 */
-  
-  /* 隐藏滚动条但保留功能 */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
-}
-
-/* 隐藏 WebKit/Chrome 滚动条 */
-.currentTranscript::-webkit-scrollbar {
-  display: none;
-}
-
-.currentTranscript.active {
-  animation: fadeIn 0.2s ease-in;
-  border-color: #5c8d89;
-  box-shadow: 0 0 5px rgba(92, 141, 137, 0.3);
+  padding: 5px 10px;
 }
 
 /* 确保全部文本区域有固定高度和垂直滚动 */
@@ -211,15 +137,16 @@
   color: #495057;
   background-color: rgba(255, 255, 255, 0.5);
   border-radius: 8px;
-  border: 1px dashed var(--border-color);
+  border: 1px dashed var(--border-color, #d1c3a6);
   margin-bottom: 0; /* 移除底部边距 */
   
-  /* 允许伸展填充容器 */
-  flex: 1;
-  min-height: 150px; /* 设置最小高度而非固定高度 */
-  height: auto; /* 自动高度 */
+  /* 关键修复：确保滚动正常工作 */
+  flex: 1; 
+  height: 0; /* 关键属性：强制子元素遵守flex布局 - 不能与 height: auto 同时存在 */
+  min-height: 150px;
   overflow-y: auto; /* 启用垂直滚动 */
   max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* 吉卜力风格的滚动条 - 特别为fullTranscript定制 */
@@ -240,6 +167,23 @@
 
 .fullTranscript::-webkit-scrollbar-thumb:hover {
   background: rgba(122, 158, 159, 0.7);
+}
+
+/* 为FullTranscriptBox的父容器添加样式 */
+.fullTranscriptWrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 200px;
+  /* 添加这行以确保wrapper的高度足够 */
+  height: 400px;
+}
+
+/* 为主语音识别容器添加样式 */
+.speechRecognitionContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 /* 以花朵标题装饰 */
@@ -263,11 +207,4 @@
   color: #a39081;
   margin-bottom: 10px;
   font-style: italic;
-}
-
-/* 文本容器，用于包装文本和光标 */
-.textWithCursor {
-  display: inline-block;
-  white-space: nowrap;
-  position: relative;
 }
