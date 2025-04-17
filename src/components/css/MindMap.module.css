@@ -214,3 +214,63 @@
   max-width: 100%;
   max-height: 100%;
 }
+
+/* 添加到 MindMap.module.css 文件 */
+.nodeInfoPanel {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: rgba(255, 249, 230, 0.3);
+  border: 1px dashed #d1c3a6;
+  border-radius: 8px;
+}
+
+.nodeInfoPanel h4 {
+  color: #5c8d89;
+  margin-top: 0;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #e6d7b8;
+  padding-bottom: 8px;
+}
+
+.nodeInfoPanel h5 {
+  color: #7a9e9f;
+  margin: 10px 0;
+}
+
+.relatedRecords {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.recordsList {
+  padding: 0 5px;
+}
+
+.recordItem {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e6d7b8;
+}
+
+.recordItem:last-child {
+  border-bottom: none;
+}
+
+.recordMainPoint {
+  font-weight: 600;
+  color: #5c8d89;
+  margin-bottom: 5px;
+}
+
+.recordContent {
+  font-size: 0.9rem;
+  color: #495057;
+  line-height: 1.5;
+}
+
+.noRecords {
+  color: #a39081;
+  font-style: italic;
+  text-align: center;
+  padding: 10px 0;
+}
