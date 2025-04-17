@@ -2,10 +2,8 @@
  * AI管理服务
  * 提供统一的AI API调用接口
  */
-import { API_TYPES, DEFAULT_API, GEMINI_CONFIG, GLM_CONFIG, MISTRAL_CONFIG, OPENROUTER_CONFIG } from '../config/apiConfig';
+import { getProvider, DEFAULT_API, getAllProviders } from './api/ApiRegistry';
 import { executeWithFallbackStrategy } from './AiFallbackService';
-import { callGeminiApi, callGlmApi, callMistralApi } from './apiServices';
-import { formatResponse } from './responseFormatter';
 
 /**
  * Returns the currently configured default API
@@ -13,6 +11,19 @@ import { formatResponse } from './responseFormatter';
  */
 export const getDefaultAPI = () => {
   return DEFAULT_API;
+};
+
+/**
+ * 获取所有可用的API提供者信息
+ * @returns {Array} 提供者信息数组
+ */
+export const getAvailableProviders = () => {
+  const providers = getAllProviders();
+  return Object.values(providers).map(p => ({
+    type: p.type,
+    name: p.name,
+    supportsFallback: p.supportsFallback
+  }));
 };
 
 /**
@@ -26,25 +37,36 @@ export const callAI = async (text, apiType = null, options = {}) => {
   // 确定要使用的API类型
   const currentApiType = apiType || localStorage.getItem('currentApiType') || DEFAULT_API;
   
+  // 获取API提供者
+  const provider = getProvider(currentApiType);
+  if (!provider) {
+    throw new Error(`不支持的API类型: ${currentApiType}`);
+  }
+  
   // 记录调用信息
-  console.log(`Using API (${currentApiType}) with prompt: ${text.substring(0, 50)}...`);
+  console.log(`Using API (${provider.name}) with prompt: ${text.substring(0, 50)}...`);
   
   let response;
   
-  // 如果是OpenRouter，使用高级回退策略
-  if (currentApiType.toLowerCase() === API_TYPES.OPENROUTER) {
-    try {
-      // 使用高级回退服务，传递配置对象
-      const result = await executeWithFallbackStrategy(
-        text, 
-        options,
-        { OPENROUTER_CONFIG, GEMINI_CONFIG, MISTRAL_CONFIG, GLM_CONFIG, API_TYPES }
-      );
+  try {
+    // OpenRouter具有特殊的回退策略
+    if (provider.type === 'openrouter') {
+      // 使用高级回退服务
+      const allProviders = getAllProviders();
+      const configs = Object.values(allProviders).reduce((acc, p) => {
+        acc[p.type.toUpperCase() + '_CONFIG'] = p.getDefaultConfig();
+        return acc;
+      }, {});
       
-      // 从结果中提取实际响应和元数据
+      const result = await executeWithFallbackStrategy(text, options, {
+        ...configs,
+        API_TYPES: Object.keys(allProviders).reduce((types, type) => {
+          types[type.toUpperCase()] = type;
+          return types;
+        }, {})
+      });
+      
       response = result.response;
-      
-      // 将元数据添加到响应对象中
       response.usedApiType = result.apiType;
       
       if (result.model) {
@@ -55,40 +77,53 @@ export const callAI = async (text, apiType = null, options = {}) => {
         response.fallbackUsed = true;
         response.originalApiType = result.originalApiType;
       }
-      
-    } catch (error) {
-      console.error('AI调用失败 (所有回退都失败):', error);
-      throw error;
+    } else {
+      // 直接调用提供者的API
+      response = await provider.callApi(text, options);
     }
-  } else {
-    // 对于非OpenRouter API，直接调用相应API
-    try {
-      switch (currentApiType.toLowerCase()) {
-        case API_TYPES.GLM:
-          response = await callGlmApi(text, options);
-          break;
-        case API_TYPES.GEMINI:
-          response = await callGeminiApi(text, options);
-          break;
-        case API_TYPES.MISTRAL:
-          response = await callMistralApi(text, false, options);
-          break;
-        case API_TYPES.MISTRAL_PIXTRAL:
-          response = await callMistralApi(text, true, options);
-          break;
-        default:
-          throw new Error(`不支持的API类型: ${currentApiType}`);
-      }
-      
-      response.usedApiType = currentApiType;
-    } catch (error) {
-      console.error(`${currentApiType} API调用失败:`, error);
-      throw error;
-    }
+    
+    return response;
+  } catch (error) {
+    console.error(`${provider.name} API调用失败:`, error);
+    throw error;
   }
-  
-  return response;
 };
 
-// 导出格式化函数
-export { formatResponse };
+/**
+ * Format the API response to a standardized structure
+ * @param {object} response - The raw API response
+ * @returns {object} - Standardized response object
+ */
+export const formatResponse = (response) => {
+  try {
+    // 获取使用的API类型
+    const apiType = response.usedApiType;
+    if (!apiType) {
+      throw new Error('无法确定API类型');
+    }
+    
+    // 获取相应的提供者
+    const provider = getProvider(apiType);
+    if (!provider) {
+      throw new Error(`未找到API类型 ${apiType} 的提供者`);
+    }
+    
+    // 使用提供者的格式化方法
+    const formattedResponse = provider.formatResponse(response);
+    
+    // 添加额外的回退信息
+    if (response.fallbackUsed) {
+      formattedResponse.fallbackUsed = true;
+      formattedResponse.originalApiType = response.originalApiType;
+    }
+    
+    if (response.usedModel) {
+      formattedResponse.usedModel = response.usedModel;
+    }
+    
+    return formattedResponse;
+  } catch (error) {
+    console.error(`格式化响应时出错:`, error);
+    throw error;
+  }
+};
