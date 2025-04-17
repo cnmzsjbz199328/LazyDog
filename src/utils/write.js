@@ -84,3 +84,20 @@ export const cleanStorageContent = (storageKey = 'apiResponse') => {
     return 0;
   }
 };
+
+export const saveMindMapDataToLocalStorage = (data, storageKey = 'mindmap_data') => {
+  try {
+    localStorage.setItem(storageKey, JSON.stringify(data));
+    
+    // 触发自定义事件，通知其他组件数据已更新
+    const event = new CustomEvent('localStorageUpdated', {
+      detail: { storageKey, action: 'added' }
+    });
+    window.dispatchEvent(event);
+    
+    return true;
+  } catch (err) {
+    console.error('Failed to save mind map data to localStorage:', err);
+    return false;
+  }
+};

@@ -1,6 +1,5 @@
 import { callAI, formatResponse } from '../services/aiManagement';
-import { saveContentToLocalStorage } from './write';
-
+import { saveMindMapDataToLocalStorage } from './write'; // 修改导入语句
 // Add caching functionality to reduce repeated calls
 const getMindMapFromCache = (content, mainPoint) => {
   try {
@@ -203,8 +202,8 @@ const saveMindMapToLocalStorage = (mindMapCode, title) => {
       createdAt: new Date().toISOString()
     };
     
-    // Save to local storage
-    saveContentToLocalStorage(JSON.stringify(mindMapData), 'mindmap_data');
+    // 使用新函数保存
+    saveMindMapDataToLocalStorage(mindMapData);
     
     console.log('Mind map data saved to local storage');
   } catch (err) {

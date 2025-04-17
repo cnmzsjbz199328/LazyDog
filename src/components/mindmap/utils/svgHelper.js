@@ -43,27 +43,15 @@ export const addNodeInteractivity = (svgElement) => {
   
   console.log(`节点查找统计: .node=${nodes.length}, flowchart=${flowchartNodes.length}, g[id]=${allGroups.length}, text=${texts.length}`);
   
-  // 选择最合适的节点集合
-  let elementsToUse = [];
+  // 优先使用.node选择器，它通常包含所有需要交互的节点
+  let elementsToUse = Array.from(svgElement.querySelectorAll('.node'));
   
-  if (nodes.length > 0) {
-    console.log('使用.node类节点');
-    elementsToUse = Array.from(nodes);
-  } else if (flowchartNodes.length > 0) {
-    console.log('使用flowchart节点');
-    elementsToUse = Array.from(flowchartNodes);
-  } else if (allGroups.length > 0) {
-    console.log('使用所有带ID的g元素');
-    elementsToUse = Array.from(allGroups);
-  } else if (texts.length > 0) {
-    console.log('使用文本节点');
-    elementsToUse = Array.from(texts);
-  } else {
-    console.warn('找不到任何可用节点，尝试使用所有g元素');
-    elementsToUse = Array.from(svgElement.querySelectorAll('g'));
+  // 仅当找不到.node节点时才尝试其他选择器
+  if (elementsToUse.length === 0) {
+    elementsToUse = Array.from(svgElement.querySelectorAll('.flowchart-node, g[id^="flowchart-"]'));
   }
   
-  console.log(`将为${elementsToUse.length}个元素添加交互性`);
+  console.log(`找到${elementsToUse.length}个可交互节点`);
   
   elementsToUse.forEach((node, index) => {
     console.log(`为元素 #${index} (${node.nodeName}, ID: ${node.id || 'no-id'})添加点击事件`);
@@ -90,24 +78,10 @@ export const addNodeInteractivity = (svgElement) => {
       
       // 获取节点 ID 和文本内容
       const nodeId = node.id || `node-${Date.now()}`;
-      let nodeText = '';
       
-      // 尝试多种方式获取节点文本
+      // 获取节点文本
       const nodeLabel = node.querySelector('.nodeLabel');
-      const textElements = node.querySelectorAll('text');
-      
-      if (nodeLabel) {
-        nodeText = nodeLabel.textContent || 'Unknown';
-        console.log(`从.nodeLabel获取到文本: "${nodeText}"`);
-      } else if (textElements && textElements.length > 0) {
-        nodeText = textElements[0].textContent || 'Unknown';
-        console.log(`从text元素获取到文本: "${nodeText}"`);
-      } else {
-        // 最后尝试获取任何文本内容
-        const allText = node.textContent || 'Unknown';
-        nodeText = allText;
-        console.log(`无法找到特定文本元素，使用节点文本内容: "${nodeText}"`);
-      }
+      const nodeText = nodeLabel ? nodeLabel.textContent.trim() : (node.textContent || 'Unknown').trim();
       
       console.log(`节点点击事件: ${nodeId} - "${nodeText}"`);
       
