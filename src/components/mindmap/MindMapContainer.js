@@ -102,8 +102,16 @@ const MindMapContainer = ({ content, mainPoint }) => {
       try {
         const parsedData = JSON.parse(mindMapData);
         if (parsedData && parsedData.code) {
-          // 重新生成SVG
-          generateMindMapSvg(parsedData.code, parsedData.title);
+          console.log('主视图更新思维导图');
+          
+          // 确保 generateMindMapSvg 返回 Promise
+          generateMindMapSvg(parsedData.code, parsedData.title || 'Mind Map')
+            .then(() => {
+              console.log('主视图思维导图更新完成');
+            })
+            .catch(err => {
+              console.error('主视图更新失败:', err);
+            });
         }
       } catch (err) {
         console.error('解析更新后的思维导图数据失败:', err);
