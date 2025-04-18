@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { generateMindMap } from '../../utils/MindMapUtil';
 import MindMapCore from './MindMapCore';
 import MindMapModal from './MindMapModal';
@@ -17,6 +17,29 @@ const MindMapContainer = ({ content, mainPoint }) => {
   
   // 使用 Mermaid Hook
   const { isLoaded } = useMermaid();
+
+  // 将 generateMindMapSvg 提取到 useEffect 外部，使其可以被其他函数引用
+  const generateMindMapSvg = useCallback(async (mapCode, title) => {
+    if (!window.mermaid) return;
+    
+    try {
+      const uniqueId = `mindmap-${Date.now()}`;
+      const { ensureFlowchartFormat } = await import('./utils/formatter');
+      const formattedCode = ensureFlowchartFormat(mapCode, title);
+      
+      window.mermaid.render(uniqueId, formattedCode)
+        .then(({ svg }) => {
+          setSvgContent(svg);
+        })
+        .catch(err => {
+          console.error('Mind map rendering error:', err);
+          setError('Failed to render mind map');
+        });
+    } catch (err) {
+      console.error('Mind map rendering error:', err);
+      setError('Failed to render mind map');
+    }
+  }, []);
 
   // 处理生成思维导图
   useEffect(() => {
@@ -68,31 +91,25 @@ const MindMapContainer = ({ content, mainPoint }) => {
       }
     };
 
-    // 生成思维导图 SVG
-    const generateMindMapSvg = async (mapCode, title) => {
-      if (!window.mermaid) return;
-      
-      try {
-        const uniqueId = `mindmap-${Date.now()}`;
-        const { ensureFlowchartFormat } = await import('./utils/formatter');
-        const formattedCode = ensureFlowchartFormat(mapCode, title);
-        
-        window.mermaid.render(uniqueId, formattedCode)
-          .then(({ svg }) => {
-            setSvgContent(svg);
-          })
-          .catch(err => {
-            console.error('Mind map rendering error:', err);
-            setError('Failed to render mind map');
-          });
-      } catch (err) {
-        console.error('Mind map rendering error:', err);
-        setError('Failed to render mind map');
-      }
-    };
-
     generateMap();
-  }, [content, mainPoint, currentMapSource, isLoaded]);
+  }, [content, mainPoint, currentMapSource, isLoaded, generateMindMapSvg]);
+
+  // 添加思维导图更新处理
+  const handleMindMapUpdate = useCallback(() => {
+    // 当思维导图被更新时，重新获取并渲染
+    const mindMapData = localStorage.getItem('mindmap_data');
+    if (mindMapData) {
+      try {
+        const parsedData = JSON.parse(mindMapData);
+        if (parsedData && parsedData.code) {
+          // 重新生成SVG
+          generateMindMapSvg(parsedData.code, parsedData.title);
+        }
+      } catch (err) {
+        console.error('解析更新后的思维导图数据失败:', err);
+      }
+    }
+  }, [generateMindMapSvg]);
 
   // 打开模态框
   const openModal = () => {
@@ -118,6 +135,7 @@ const MindMapContainer = ({ content, mainPoint }) => {
         onClose={closeModal}
         svgContent={svgContent}
         isProcessing={isProcessing}
+        onMindMapUpdate={handleMindMapUpdate}
       />
     </>
   );
