@@ -1,29 +1,32 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Modal from '../Modal';
 import MindMapDisplay from './components/MindMapDisplay';
+import PrintMindMapButton from './components/PrintMindMapButton';
 import { useMindMapInteraction } from './hooks/useMindMapInteraction';
 import styles from '../css/MindMap.module.css';
 
 /**
- * 思维导图模态框组件
+ * Mind Map Modal Component
  */
 const MindMapModal = ({ show, onClose, svgContent, isProcessing, onMindMapUpdate }) => {
   const [shouldReload, setShouldReload] = useState(false);
   const [mermaidCode, setMermaidCode] = useState(null);
   const [isRendering, setIsRendering] = useState(false);
   
-  // 使用 ref 跟踪已扩展的节点，避免重复扩展
+  // Use ref to track already expanded nodes, to avoid repeated expansion
   const expandedNodesRef = useRef(new Set());
-  // 跟踪上次扩展操作的时间戳，防止短时间内多次扩展
+  // Track the timestamp of the last expansion operation, preventing multiple expansions in short time
   const lastExpandTimeRef = useRef(0);
-  // 跟踪当前正在处理的节点ID
+  // Track the currently processing node ID
   const processingNodeRef = useRef(null);
+  // Ref for the mind map container to access SVG for printing
+  const mindMapContainerRef = useRef(null);
   
-  // 添加日志：组件状态变化追踪
+  // Add logging: Component state change tracking
   useEffect(() => {
   }, [shouldReload, mermaidCode, isRendering, isProcessing, show, svgContent]);
   
-  // 使用思维导图交互钩子，包含扩展功能
+  // Use the mind map interaction hook, including expansion functionality
   const {
     lastClickedNode,
     expandCurrentNode,
@@ -33,11 +36,11 @@ const MindMapModal = ({ show, onClose, svgContent, isProcessing, onMindMapUpdate
     resetMindMapUpdated
   } = useMindMapInteraction();
   
-  // 监控 mindMapUpdated 状态变化
+  // Monitor mindMapUpdated state changes
   useEffect(() => {
   }, [mindMapUpdated]);
   
-  // 提取获取最新思维导图数据的函数
+  // Extract function to get the latest mind map data
   const fetchLatestMindMapData = useCallback(() => {
     try {
       const mindMapData = localStorage.getItem('mindmap_data');
@@ -46,11 +49,11 @@ const MindMapModal = ({ show, onClose, svgContent, isProcessing, onMindMapUpdate
         const parsedData = JSON.parse(mindMapData);
         if (parsedData && parsedData.code) {
           
-          // 设置代码并强制进入渲染阶段
+          // Set code and force render phase
           setMermaidCode(parsedData.code);
-          setIsRendering(true); // 立即触发渲染阶段
+          setIsRendering(true); // Immediately trigger rendering phase
           
-          // 添加短延迟后强制重置shouldReload，确保组件有足够时间渲染
+          // Add short delay to reset shouldReload, ensuring component has enough time to render
           setTimeout(() => {
             setShouldReload(false);
           }, 100);
@@ -65,39 +68,39 @@ const MindMapModal = ({ show, onClose, svgContent, isProcessing, onMindMapUpdate
     }
   }, []);
   
-  // 监听思维导图更新
+  // Listen for mind map updates
   useEffect(() => {
-    // 如果没有更新，直接返回
+    // If no update, return directly
     if (!mindMapUpdated) return;
     
-    // 设置重新加载标志
+    // Set reload flag
     setShouldReload(true);
     
-    // 通知父组件
+    // Notify parent component
     if (onMindMapUpdate) {
       onMindMapUpdate();
     }
     
-    // 重置更新标志
+    // Reset update flag
     resetMindMapUpdated();
     
-    // 延迟获取最新数据
+    // Delay fetching latest data
     const timer = setTimeout(() => {
       fetchLatestMindMapData();
       
-      // 完成操作后，释放正在处理的节点引用
+      // Release processing node reference after completion
       processingNodeRef.current = null;
     }, 500);
     
-    // 添加安全超时，防止永久加载
+    // Add safety timeout to prevent permanent loading
     const safetyTimer = setTimeout(() => {
       if (shouldReload) {
         setShouldReload(false);
         processingNodeRef.current = null;
       }
-    }, 5000); // 5秒后强制重置
+    }, 5000); // Force reset after 5 seconds
     
-    // 添加额外安全检查
+    // Add extra safety check
     const extraSafetyTimer = setTimeout(() => {
       
       if (shouldReload || isRendering) {
@@ -115,29 +118,29 @@ const MindMapModal = ({ show, onClose, svgContent, isProcessing, onMindMapUpdate
     };
   }, [mindMapUpdated, onMindMapUpdate, resetMindMapUpdated, shouldReload, fetchLatestMindMapData, mermaidCode, isRendering]);
   
-  // 渲染开始回调
+  // Render start callback
   const handleRenderStart = useCallback(() => {
     setIsRendering(true);
   }, []);
   
-  // 修改渲染完成回调
+  // Modified render complete callback
   const handleRenderComplete = useCallback((renderedSvg, error) => {
     
-    // 无论成功与否，都需要重置加载状态
+    // Reset loading state regardless of success or failure
     setIsRendering(false);
     setShouldReload(false);
     
-    // 只有在成功时清除mermaidCode
+    // Only clear mermaidCode on success
     if (!error && renderedSvg) {
       setMermaidCode(null);
     } else if (error) {
     }
     
-    // 完成渲染后，释放正在处理的节点引用
+    // Release processing node reference after rendering completes
     processingNodeRef.current = null;
   }, []);
   
-  // 处理节点扩展
+  // Handle node expansion
   const handleExpandNode = useCallback(async () => {
     if (!lastClickedNode) {
       return;
@@ -145,50 +148,50 @@ const MindMapModal = ({ show, onClose, svgContent, isProcessing, onMindMapUpdate
     
     const nodeId = lastClickedNode.id;
     
-    // 检查是否已经在处理这个节点
+    // Check if this node is already being processed
     if (processingNodeRef.current === nodeId) {
       return;
     }
     
-    // 检查节点是否已被扩展过
+    // Check if the node has already been expanded
     if (expandedNodesRef.current.has(nodeId)) {
       return;
     }
     
-    // 检查时间间隔，避免短时间内多次扩展
+    // Check time interval to avoid multiple expansions in short time
     const now = Date.now();
-    if (now - lastExpandTimeRef.current < 1500) { // 至少1.5秒间隔
+    if (now - lastExpandTimeRef.current < 1500) { // At least 1.5 seconds interval
       return;
     }
     
-    // 设置当前正在处理的节点
+    // Set current processing node
     processingNodeRef.current = nodeId;
-    // 更新最后扩展时间
+    // Update last expansion time
     lastExpandTimeRef.current = now;
     
     try {
       await expandCurrentNode();
       
-      // 将节点标记为已扩展
+      // Mark node as expanded
       expandedNodesRef.current.add(nodeId);
       
-      // 扩展成功后，直接获取最新数据并触发渲染
+      // Get the latest data and trigger rendering after successful expansion
       setShouldReload(true);
       
-      // 短延迟后直接获取数据
+      // Short delay before fetching data
       setTimeout(() => {
         fetchLatestMindMapData();
       }, 500);
       
     } catch (error) {
-      // 失败后重置处理状态
+      // Reset processing state after failure
       processingNodeRef.current = null;
     }
   }, [lastClickedNode, expandCurrentNode, fetchLatestMindMapData]);
   
-  // 监听 lastClickedNode 变化，自动触发扩展（优化版）
+  // Listen for lastClickedNode changes, automatically trigger expansion (optimized version)
   useEffect(() => {
-    // 确保有点击的节点，并且当前没有正在处理的操作
+    // Ensure there is a clicked node and no ongoing operation
     if (lastClickedNode && 
         !isExpanding && 
         !shouldReload && 
@@ -198,12 +201,12 @@ const MindMapModal = ({ show, onClose, svgContent, isProcessing, onMindMapUpdate
       
       const nodeId = lastClickedNode.id;
       
-      // 如果节点已经被扩展过，不再触发扩展
+      // If the node has been expanded, don't trigger expansion again
       if (expandedNodesRef.current.has(nodeId)) {
         return;
       }
       
-      // 添加300ms的延迟，避免快速连续点击导致的反复渲染
+      // Add 300ms delay to avoid repeated rendering due to rapid clicks
       const timer = setTimeout(() => {
         handleExpandNode();
       }, 300);
@@ -212,20 +215,20 @@ const MindMapModal = ({ show, onClose, svgContent, isProcessing, onMindMapUpdate
     }
   }, [lastClickedNode, isExpanding, shouldReload, isRendering, isProcessing, handleExpandNode]);
 
-  // 当组件显示时，重置已扩展节点集合
+  // Reset expanded nodes set when component is shown
   useEffect(() => {
     if (show) {
       expandedNodesRef.current = new Set();
     }
   }, [show]);
 
-  // 确定是否显示加载状态
+  // Determine whether to show loading state
   const showLoading = isProcessing || shouldReload || isRendering || isExpanding;
   
-  // 确定是否有内容可渲染
+  // Determine whether content is available for rendering
   const hasContent = mermaidCode || svgContent;
   
-  // 添加显示状态日志
+  // Add display status logging
   useEffect(() => {
     if (show) {
     }
@@ -237,24 +240,34 @@ const MindMapModal = ({ show, onClose, svgContent, isProcessing, onMindMapUpdate
       onClose={() => {
         onClose();
       }}
-      title="思维导图"
+      title="MindMap"
+      extraButtons={
+        <PrintMindMapButton 
+          containerRef={mindMapContainerRef}
+          title={lastClickedNode?.text || "Mind Map"}
+          className={styles.printButton}
+        />
+      }
     >
       <div className={styles.modalMindMapContent}>
-        {/* 显示加载状态，但不阻止渲染组件 */}
+        {/* Show loading state, but don't block rendering */}
         {showLoading && (
           <div className={styles.processingIndicator} style={{position: 'absolute', top: 0, left: 0, width: '100%', padding: '10px', zIndex: 100, backgroundColor: 'rgba(255,255,255,0.7)'}}>
             <i className="fas fa-spinner fa-spin"></i>
-            {isExpanding ? "扩展节点中..." : 
-             (shouldReload ? "重新加载思维导图..." : 
-             (isRendering ? "渲染思维导图..." : "生成思维导图中..."))}
+            {isExpanding ? "Expanding node..." : 
+             (shouldReload ? "Reloading mind map..." : 
+             (isRendering ? "Rendering mind map..." : "Generating mind map..."))}
           </div>
         )}
         
-        {/* 无论是否加载中，只要有内容或代码就渲染 */}
+        {/* Render content if available, regardless of loading state */}
         {(mermaidCode || svgContent) ? (
-          <div style={{position: 'relative', width: '100%', height: '100%'}}>
+          <div 
+            ref={mindMapContainerRef}
+            style={{position: 'relative', width: '100%', height: '100%'}}
+          >
             <MindMapDisplay 
-              key={mermaidCode ? `mc-${Date.now()}` : 'svg'} // 添加key强制重新渲染
+              key={mermaidCode ? `mc-${Date.now()}` : 'svg'} // Add key to force re-render
               mermaidCode={mermaidCode}
               svgContent={!mermaidCode ? svgContent : null}
               isModal={true}
@@ -265,12 +278,12 @@ const MindMapModal = ({ show, onClose, svgContent, isProcessing, onMindMapUpdate
           </div>
         ) : (
           <div className={styles.placeholder}>
-            没有可用的思维导图内容
+            No mind map content available
           </div>
         )}
       </div>
       
-      {/* 保留错误信息显示 */}
+      {/* Retain error message display */}
       {expandError && (
         <div className={styles.expandError} style={{ margin: '10px 0', padding: '10px', backgroundColor: '#ffebee', borderRadius: '4px', color: '#d32f2f' }}>
           <i className="fas fa-exclamation-triangle"></i> {expandError}

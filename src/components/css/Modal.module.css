@@ -110,6 +110,13 @@
   background: rgba(122, 158, 159, 0.7);
 }
 
+.modalControls {
+  display: flex;
+  flex-direction: row; /* 确保是水平排列 */
+  align-items: center;
+  gap: 10px; /* 添加间隔 */
+}
+
 /* 动画效果 */
 @keyframes fadeIn {
   from { opacity: 0; }
