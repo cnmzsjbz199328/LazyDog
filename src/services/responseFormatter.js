@@ -44,7 +44,12 @@ export const formatResponse = (response) => {
       if (response?.choices?.[0]?.message?.content) {
         formattedText = response.choices[0].message.content.trim();
       }
-    } else if (apiType === API_TYPES.OPENROUTER) {
+    }else if (apiType === API_TYPES.XAI) {      
+      if (response?.choices?.[0]?.message?.content) {
+        formattedText = response.choices[0].message.content.trim();
+      }
+    }
+    else if (apiType === API_TYPES.OPENROUTER) {
       console.log("Processing OpenRouter response");
       
       // For OpenRouter, the structure should match the OpenAI format

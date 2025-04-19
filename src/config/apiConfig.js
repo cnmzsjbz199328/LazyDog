@@ -58,13 +58,25 @@ export const OPENROUTER_CONFIG = {
 };
 
 // Available API types
+// xAI/Grok API Configuration
+export const XAI_CONFIG = {
+  apiKey: process.env.REACT_APP_XAI_API_KEY,
+  endpoint: 'https://api.x.ai/v1/chat/completions',
+  model: 'grok-3-mini-beta',
+  defaultParams: {
+    temperature: 0,
+    stream: false
+  }
+};
+
+// Then add to API_TYPES
 export const API_TYPES = {
   GLM: 'glm',
   GEMINI: 'gemini', 
   MISTRAL: 'mistral',
   MISTRAL_PIXTRAL: 'mistral_pixtral',
-  OPENROUTER: 'openrouter'
+  OPENROUTER: 'openrouter',
+  XAI: 'xai'  // Add this line
 };
-
 // Default settings
-export const DEFAULT_API = API_TYPES.OPENROUTER; // Setting OpenRouter as the default API
+export const DEFAULT_API = API_TYPES.XAI; // Setting OpenRouter as the default API

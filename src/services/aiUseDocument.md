@@ -321,3 +321,89 @@ return response;
 - **高灵活性**：支持动态配置和优先级调整
 
 开发者可以专注于使用统一接口，无需关心底层实现细节，同时系统能够智能地处理各种错误情况并保持服务连续性。
+
+## 添加新 API 提供者的最佳实践
+
+在将新的 AI API 集成到系统时，可能会遇到一些常见问题。以下是基于实际经验的注意事项和解决方案：
+
+### 常见问题与解决方案
+
+#### 1. 响应格式不一致
+
+**问题**: 不同 API 提供者返回的响应格式可能不一致，导致后续处理出错。例如，添加 xAI/Grok API 时，它的 `formatResponse` 方法返回的是 `content` 属性而不是其他提供者使用的 `text` 属性。
+
+**症状**:
+```
+TypeError: Cannot read properties of undefined (reading 'replace')
+```
+
+**解决方案**:
+- 在 `formatResponse` 方法中同时返回 `text` 和 `content` 属性，保持与其他提供者一致:
+```javascript
+return {
+  content: content || '无内容返回',
+  text: content || '无内容返回', // 添加与其他provider一致的字段
+  rawResponse: response,
+  apiType: this.type,
+  usedModel: response.usedModel || API_CONFIG.model
+};
+```
+- 在系统中处理响应格式的地方添加兼容性检查，优先使用 `text` 或 `content`
+
+#### 2. 配置文件不同步
+
+**问题**: 在不同文件中定义了相同的配置（如默认 API 类型），但修改时没有同步更新所有位置。
+
+**症状**: 更改默认 API 后系统行为与预期不符。
+
+**解决方案**:
+- 遵循单一来源原则，只在 `apiConfig.js` 中定义配置
+- 其他文件通过导入使用这些配置:
+```javascript
+import { API_TYPES, DEFAULT_API } from '../../config/apiConfig';
+```
+- 避免在注释和代码之间出现不一致（如 `DEFAULT_API = API_TYPES.XAI; // Setting OpenRouter as the default API`）
+
+#### 3. 错误处理不完善
+
+**问题**: API 调用过程中的错误没有得到充分处理，导致异常传播到应用程序其他部分。
+
+**症状**: 应用程序崩溃或显示不友好的错误消息。
+
+**解决方案**:
+- 在每个 API provider 中实现完整的错误处理，捕获所有可能的异常
+- 返回带有错误标志的标准化响应对象:
+```javascript
+try {
+  // API 调用逻辑
+} catch (error) {
+  return {
+    text: '处理请求时出错',
+    content: '处理请求时出错',
+    error: true,
+    errorMessage: error.message
+  };
+}
+```
+
+### 新 API 提供者实现检查清单
+
+添加新 API 提供者时，使用以下检查清单确保实现符合系统要求:
+
+1. **接口完整性**: 实现所有必需方法 (`callApi`, `formatResponse`, `getDefaultConfig`)
+2. **返回格式一致性**: 确保 `formatResponse` 返回包含 `text` 属性的对象
+3. **错误处理**: 实现完整的错误捕获和处理逻辑
+4. **日志记录**: 添加适当的日志记录，帮助调试问题
+5. **配置独立性**: 使用自己的配置对象，避免与其他提供者共享配置
+6. **认证处理**: 正确处理 API 密钥和认证头部
+7. **回退支持**: 设置 `supportsFallback` 标志，指示是否支持作为回退选项
+
+### 新 API 添加后的测试策略
+
+添加新 API 提供者后，执行以下测试确保集成成功:
+
+1. **基本调用测试**: 验证能够成功调用新 API 并接收响应
+2. **错误处理测试**: 通过提供无效输入或禁用 API 密钥测试错误处理
+3. **回退测试**: 如果配置为回退选项，测试在主 API 失败时是否正确触发
+4. **格式化测试**: 验证响应格式化是否符合系统要求
+5. **边界条件测试**: 测试空输入、超长输入、特殊字符等边界情况

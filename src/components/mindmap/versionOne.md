@@ -76,6 +76,51 @@
    - 更新状态变量 lastClickedNode 和 relatedRecords
 5. MindMapModal 根据状态渲染 NodeInfoPanel 显示相关记录
 
+## 思维导图数据流向图
+
+```mermaid
+flowchart TD
+    User[用户] -->|提供内容和主题| Container[MindMapContainer]
+    Container -->|调用生成API| API[generateMindMap]
+    API -->|返回Mermaid代码| Container
+    Container -->|渲染SVG| Helper[mermaidHelper]
+    Helper -->|SVG内容| Container
+    Container -->|传递SVG| Core[MindMapCore]
+    Core -->|显示| Rendered[基础思维导图]
+    User -->|点击放大按钮| Core
+    Core -->|打开并传递SVG| Modal[MindMapModal]
+    Modal -->|渲染SVG并添加交互| SVGHelper[svgHelper]
+    User -->|点击节点| InteractiveSVG[交互式SVG节点]
+    InteractiveSVG -->|触发事件| CustomEvent[mindmap-node-click事件]
+    CustomEvent -->|事件参数| Hook[useMindMapInteraction]
+    Hook -->|获取数据| LocalStorage[localStorage]
+    LocalStorage -->|历史记录| Hook
+    Hook -->|更新状态| Modal
+    Modal -->|显示节点信息| InfoPanel[NodeInfoPanel]
+    
+    subgraph 数据存储层
+        LocalStorage
+    end
+    
+    subgraph 核心组件层
+        Container
+        Core
+        Modal
+    end
+    
+    subgraph 工具层
+        Helper
+        SVGHelper
+        Hook
+    end
+    
+    subgraph 交互层
+        InteractiveSVG
+        CustomEvent
+        InfoPanel
+    end
+```
+
 ## 关键技术点
 
 ### 1. SVG交互增强

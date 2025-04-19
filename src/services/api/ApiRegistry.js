@@ -8,13 +8,17 @@ import MistralPixtralProvider from './providers/MistralPixtralProvider';
 import GlmProvider from './providers/GlmProvider';
 import OpenRouterProvider from './providers/OpenRouterProvider';
 
-// API提供者集合
+// Add import
+import XaiProvider from './providers/XaiProvider';
+
+// Update providers collection
 const providers = {
   [GeminiProvider.type]: GeminiProvider,
   [MistralProvider.type]: MistralProvider,
   [MistralPixtralProvider.type]: MistralPixtralProvider,
   [GlmProvider.type]: GlmProvider,
-  [OpenRouterProvider.type]: OpenRouterProvider
+  [OpenRouterProvider.type]: OpenRouterProvider,
+  [XaiProvider.type]: XaiProvider  // Add this line
 };
 
 /**
@@ -67,4 +71,4 @@ export const API_TYPES = Object.keys(providers).reduce((types, type) => {
  * 获取默认API类型
  * @returns {string} 默认API类型
  */
-export const DEFAULT_API = OpenRouterProvider.type;
+export const DEFAULT_API = API_TYPES.XAI;
