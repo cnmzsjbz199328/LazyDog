@@ -8,11 +8,23 @@ import { createApiProvider } from '../ApiProviderInterface';
 export default createApiProvider({
   type: 'xai',
   name: 'xAI Grok',
-  supportsFallback: false,
+  supportsFallback: true,
   
   // API调用实现
   async callApi(text, options = {}) {
     const { apiKey, endpoint, model, defaultParams } = XAI_CONFIG;
+    
+    // 检查API密钥是否正确设置
+    if (!apiKey || apiKey === 'undefined' || apiKey === '[object Object]') {
+      console.error('xAI API密钥未正确设置:', typeof apiKey, apiKey ? apiKey.substring(0, 5) + '...' : 'undefined');
+      return {
+        error: true,
+        content: '未配置有效的xAI API密钥',
+        text: '未配置有效的xAI API密钥',
+        apiType: this.type,
+        usedModel: model
+      };
+    }
     
     const data = {
       model,
@@ -28,6 +40,8 @@ export default createApiProvider({
     
     try {
       console.log(`调用xAI API，使用模型: ${model}`);
+      console.log(`API端点: ${endpoint}`);
+      console.log(`API密钥状态: ${apiKey ? '已设置' : '未设置'}`);
       
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -39,8 +53,23 @@ export default createApiProvider({
       });
       
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(`xAI API错误 (${response.status}): ${errorData.error?.message || response.statusText}`);
+        let errorMessage = '';
+        try {
+          const errorData = await response.json();
+          console.error('xAI API错误详情:', errorData);
+          errorMessage = errorData.error?.message || errorData.message || JSON.stringify(errorData);
+        } catch (e) {
+          errorMessage = await response.text() || response.statusText || `HTTP错误 ${response.status}`;
+        }
+        
+        // 返回错误对象而不是抛出错误
+        return {
+          error: true,
+          content: `xAI API错误 (${response.status}): ${errorMessage}`,
+          text: `xAI API错误 (${response.status}): ${errorMessage}`,
+          apiType: this.type,
+          usedModel: model
+        };
       }
       
       const result = await response.json();
@@ -49,7 +78,15 @@ export default createApiProvider({
       return result;
     } catch (error) {
       console.error('xAI API调用失败:', error);
-      throw error;
+      
+      // 返回错误对象而不是抛出错误
+      return {
+        error: true,
+        content: `xAI API调用失败: ${error.message}`,
+        text: `xAI API调用失败: ${error.message}`,
+        apiType: this.type,
+        usedModel: model
+      };
     }
   },
   

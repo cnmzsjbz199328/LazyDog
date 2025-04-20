@@ -39,7 +39,7 @@ export async function executeWithFallbackStrategy(text, options = {}, config) {
       .filter(p => p.type !== 'openrouter');
     
     // 优先级排序：按照预定义顺序
-    const priorityOrder = ['gemini', 'mistral', 'glm'];
+    const priorityOrder = ['gemini', 'mistral', 'glm','xai'];
     providers.sort((a, b) => {
       const indexA = priorityOrder.indexOf(a.type);
       const indexB = priorityOrder.indexOf(b.type);
