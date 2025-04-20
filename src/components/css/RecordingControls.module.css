@@ -80,3 +80,44 @@
     box-shadow: 0 0 0 0 rgba(255, 107, 107, 0);
   }
 }
+
+/* 在现有的 RecordingControls.module.css 中添加以下样式 */
+
+.controlsContainer {
+  display: flex;
+  align-items: center;
+}
+
+.languageSelector {
+  background-color: #e6d7b8;
+  color: #555;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: var(--border-radius);
+  border: none;
+  cursor: pointer;
+  transition: var(--transition);
+  text-decoration: none;
+  margin-right: 10px;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.languageSelector:hover:not(:disabled) {
+  border-color: #5c8d89;
+}
+
+.languageSelector:disabled {
+  background-color: #f0f0f0;
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+.btnGroup {
+  display: flex;
+  gap: 10px;
+}

@@ -4,28 +4,63 @@ import { useState, useEffect, useRef, useCallback } from 'react';
  * 自定义 Hook 处理语音识别的核心逻辑
  * @param {function} handleOptimization - 优化处理函数
  * @param {number} wordThreshold - 触发优化的字数阈值
+ * @param {string} language - 选择的识别语言代码
  */
-const useSpeechRecognition = (handleOptimization, wordThreshold = 200) => {
+const useSpeechRecognition = (handleOptimization, wordThreshold = 200, language = 'en-US') => {
   const [currentTranscript, setCurrentTranscript] = useState('');
   const [fullTranscript, setFullTranscript] = useState('');
   const [wordCount, setWordCount] = useState(0);
   const [isListening, setIsListening] = useState(false);
   const [transcriptKey, setTranscriptKey] = useState(0);
+  const [currentLanguage, setCurrentLanguage] = useState(language);
   
   const recognitionRef = useRef(null);
   const optimizationInProgressRef = useRef(false);
   const accumulatedTranscriptRef = useRef('');
   const isListeningRef = useRef(false);
   const recognitionActiveRef = useRef(false);
+  const languageRef = useRef(language);
   
   // 使用ref来存储阈值，这样不需要重新创建事件处理函数
   const wordThresholdRef = useRef(wordThreshold);
 
-  // 当阈值变化时更新ref
+  // 当阈值或语言变化时更新ref
   useEffect(() => {
     wordThresholdRef.current = wordThreshold;
     console.log('Word threshold updated:', wordThreshold);
   }, [wordThreshold]);
+  
+  useEffect(() => {
+    languageRef.current = language;
+    console.log('Recognition language updated:', language);
+    
+    // 如果正在识别，需要重启识别以应用新语言
+    if (recognitionActiveRef.current) {
+      try {
+        recognitionRef.current.stop();
+        
+        // 给一个短暂延迟再重启，确保完全停止
+        setTimeout(() => {
+          if (isListeningRef.current && !recognitionActiveRef.current) {
+            try {
+              recognitionRef.current.lang = language;
+              recognitionRef.current.start();
+              console.log('Recognition restarted with new language:', language);
+            } catch (e) {
+              console.error('Failed to restart recognition with new language:', e);
+            }
+          }
+        }, 300);
+      } catch (e) {
+        console.error('Failed to stop recognition for language change:', e);
+      }
+    } else if (recognitionRef.current) {
+      // 如果实例存在但未激活，只需更新语言设置
+      recognitionRef.current.lang = language;
+    }
+    
+    setCurrentLanguage(language);
+  }, [language]);
 
   // 当isListening状态变化时，同步更新ref值
   useEffect(() => {
@@ -63,7 +98,7 @@ const useSpeechRecognition = (handleOptimization, wordThreshold = 200) => {
     }
 
     const recognitionInstance = new SpeechRecognition();
-    recognitionInstance.lang = 'en-US';
+    recognitionInstance.lang = languageRef.current;
     recognitionInstance.continuous = true;
     recognitionInstance.interimResults = true;
 
@@ -245,6 +280,12 @@ const useSpeechRecognition = (handleOptimization, wordThreshold = 200) => {
     wordCount,
     isListening,
     transcriptKey,
+    currentLanguage,
+    setCurrentLanguage: (lang) => {
+      if (lang !== currentLanguage) {
+        setCurrentLanguage(lang);
+      }
+    },
     startRecognition,
     stopRecognition
   };

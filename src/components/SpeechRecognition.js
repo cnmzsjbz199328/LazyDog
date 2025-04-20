@@ -13,6 +13,7 @@ function SpeechRecognition({ setOptimizedText }) {
   const { savedBackground } = useBackgroundContext();
   const savedBackgroundRef = useRef(savedBackground);
   const [wordThreshold, setWordThreshold] = useState(200);
+  const [language, setLanguage] = useState('en-US');
   
   // 当savedBackground变化时，更新ref
   useEffect(() => {
@@ -23,20 +24,28 @@ function SpeechRecognition({ setOptimizedText }) {
   // 初始化优化逻辑
   const { handleOptimization } = useOptimization(setOptimizedText, savedBackgroundRef);
   
-  // 初始化语音识别逻辑 - 传入wordThreshold
+  // 初始化语音识别逻辑 - 传入wordThreshold和language
   const {
     currentTranscript,
     fullTranscript,
     wordCount,
     isListening,
     transcriptKey,
+    currentLanguage,
+    setCurrentLanguage,
     startRecognition,
     stopRecognition
-  } = useSpeechRecognition(handleOptimization, wordThreshold);
+  } = useSpeechRecognition(handleOptimization, wordThreshold, language);
 
   // 处理阈值变更
   const handleThresholdChange = (e) => {
     setWordThreshold(parseInt(e.target.value));
+  };
+  
+  // 处理语言变更
+  const handleLanguageChange = (newLanguage) => {
+    setLanguage(newLanguage);
+    setCurrentLanguage(newLanguage);
   };
 
   return (
@@ -52,7 +61,9 @@ function SpeechRecognition({ setOptimizedText }) {
       <RecordingControls 
         isListening={isListening} 
         startRecognition={startRecognition} 
-        stopRecognition={stopRecognition} 
+        stopRecognition={stopRecognition}
+        currentLanguage={currentLanguage}
+        onLanguageChange={handleLanguageChange}
       />
       
       <CurrentTranscriptBox 
