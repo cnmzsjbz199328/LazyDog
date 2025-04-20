@@ -29,6 +29,8 @@ jobs:
           echo "REACT_APP_GEMINI_API_KEY=${{ secrets.REACT_APP_GEMINI_API_KEY }}" > .env
           echo "REACT_APP_GLM_API_KEY=${{ secrets.REACT_APP_GLM_API_KEY }}" >> .env
           echo "REACT_APP_MISTRAL_API_KEY=${{ secrets.REACT_APP_MISTRAL_API_KEY }}" >> .env
+          echo "REACT_APP_XAI_API_KEY=${{ secrets.REACT_APP_XAI_API_KEY }}" >> .env
+          echo "REACT_APP_OPENROUTER_API_KEY=${{ secrets.REACT_APP_OPENROUTER_API_KEY }}" >> .env
       
       - name: Build Project
         run: npm run build
