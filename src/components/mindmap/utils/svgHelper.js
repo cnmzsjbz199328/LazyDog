@@ -33,16 +33,6 @@ export const addNodeInteractivity = (svgElement) => {
     return;
   }
   
-  console.log('开始为SVG添加节点交互性');
-  
-  // 使用更宽泛的选择器查找可能的节点
-  const nodes = svgElement.querySelectorAll('.node');
-  const flowchartNodes = svgElement.querySelectorAll('.flowchart-node, g[id^="flowchart-"]');
-  const allGroups = svgElement.querySelectorAll('g[id]');
-  const texts = svgElement.querySelectorAll('text');
-  
-  console.log(`节点查找统计: .node=${nodes.length}, flowchart=${flowchartNodes.length}, g[id]=${allGroups.length}, text=${texts.length}`);
-  
   // 优先使用.node选择器，它通常包含所有需要交互的节点
   let elementsToUse = Array.from(svgElement.querySelectorAll('.node'));
   
@@ -51,10 +41,7 @@ export const addNodeInteractivity = (svgElement) => {
     elementsToUse = Array.from(svgElement.querySelectorAll('.flowchart-node, g[id^="flowchart-"]'));
   }
   
-  console.log(`找到${elementsToUse.length}个可交互节点`);
-  
   elementsToUse.forEach((node, index) => {
-    console.log(`为元素 #${index} (${node.nodeName}, ID: ${node.id || 'no-id'})添加点击事件`);
     addClickEventToElement(node);
   });
 
@@ -83,14 +70,11 @@ export const addNodeInteractivity = (svgElement) => {
       const nodeLabel = node.querySelector('.nodeLabel');
       const nodeText = nodeLabel ? nodeLabel.textContent.trim() : (node.textContent || 'Unknown').trim();
       
-      console.log(`节点点击事件: ${nodeId} - "${nodeText}"`);
-      
       // 创建和分发自定义事件
       const customEvent = new CustomEvent('mindmap-node-click', {
         detail: { nodeId, nodeText }
       });
-      
-      console.log(`分发mindmap-node-click事件: ${nodeId} - "${nodeText}"`);
+
       window.dispatchEvent(customEvent);
     });
     

@@ -23,9 +23,7 @@ export const getDefaultMindMapContent = () => {
  */
 export const convertToVerticalTreeFormat = (content, mainPoint) => {
   // 只转换mindmap格式
-  if (content.includes('mindmap')) {
-    console.log("Converting from mindmap to flowchart format...");
-    
+  if (content.includes('mindmap')) { 
     let lines = content.split('\n');
     let result = ['flowchart TD'];
     let nodeMap = {};
@@ -109,8 +107,6 @@ export const convertToVerticalTreeFormat = (content, mainPoint) => {
     }
     
     const flowchartCode = result.join('\n');
-    console.log("Conversion complete. Result format:", 
-                flowchartCode.substring(0, 50) + "...");
     return flowchartCode;
   }
   

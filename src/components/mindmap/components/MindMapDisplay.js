@@ -30,7 +30,6 @@ const MindMapDisplay = ({
         
         // 优先使用Mermaid代码直接渲染
         if (mermaidCode) {
-          console.log('MindMapDisplay: 使用Mermaid代码渲染');
           const renderedSvg = await renderMermaidDiagram(
             mermaidCode, 
             containerRef.current, 
@@ -44,7 +43,6 @@ const MindMapDisplay = ({
         }
         // 其次使用传入的SVG内容
         else if (svgContent) {
-          console.log('MindMapDisplay: 使用SVG内容渲染');
           containerRef.current.innerHTML = svgContent;
           
           // 添加交互
