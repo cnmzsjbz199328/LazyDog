@@ -52,7 +52,10 @@ const languageRef = useRef(language);
 useEffect(() => {
   languageRef.current = language;
 }, [language]);
-4.2 平稳切换逻辑
+```
+
+### 4.2 平稳切换逻辑
+```javascript
 // 当语言改变时
 useEffect(() => {
   // 如果正在识别，需要重启识别以应用新语言
@@ -81,7 +84,10 @@ useEffect(() => {
   
   setCurrentLanguage(language);
 }, [language]);
-4.3 避免重复切换
+```
+
+### 4.3 避免重复切换
+```javascript
 // 处理语言变更
 const handleLanguageChange = (newLanguage) => {
   // 避免不必要的更新
@@ -90,8 +96,11 @@ const handleLanguageChange = (newLanguage) => {
     setCurrentLanguage(newLanguage);
   }
 };
-5. 样式实现
+```
+
+## 5. 样式实现
 语言选择器的样式保持与应用的整体设计风格一致，使用 CSS 模块：
+```css
 .languageSelector {
   background-color: #e6d7b8;
   color: #555;
@@ -120,7 +129,10 @@ const handleLanguageChange = (newLanguage) => {
   color: #aaa;
   cursor: not-allowed;
 }
-6. 支持的语言列表
+```
+
+## 6. 支持的语言列表
+```javascript
 const languages = [
   { code: 'en-US', name: 'English (US)' },
   { code: 'en-GB', name: 'English (UK)' },
@@ -135,18 +147,23 @@ const languages = [
   { code: 'ru-RU', name: 'Русский' },
   { code: 'pt-BR', name: 'Português' }
 ];
-7. 浏览器兼容性
+```
+
+## 7. 浏览器兼容性
 依赖Web Speech API的lang参数支持
 主流浏览器(Chrome, Edge, Safari, Firefox)都支持多语言设置
 个别语言的支持程度可能因浏览器而异
-8. 用户体验考量
+
+## 8. 用户体验考量
 即时切换: 语言切换无需重新加载页面
 视觉反馈: 下拉菜单显示当前选中语言
 状态一致性: 录音过程中禁用语言选择器，避免中断
 平稳过渡: 在语言切换时平稳重启识别过程
-9. 未来扩展可能性
+
+## 9. 未来扩展可能性
 添加自动语言检测功能
 实现多语言同时识别
 增加语言偏好保存功能
 基于用户历史使用习惯推荐语言
+
 通过以上实现方案，LazyDog应用现在能够支持多语言语音识别，提高了应用的国际化水平和用户体验。

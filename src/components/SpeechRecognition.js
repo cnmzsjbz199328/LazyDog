@@ -9,7 +9,7 @@ import RecordingControls from './speechRecognition/RecordingControls';
 import useSpeechRecognition from './hooks/useSpeechRecognition';
 import useOptimization from './hooks/useOptimization';
 
-function SpeechRecognition({ setOptimizedText }) {
+const SpeechRecognition = ({ setOptimizedText, setIsRecording }) => {
   const { savedBackground } = useBackgroundContext();
   const savedBackgroundRef = useRef(savedBackground);
   const [wordThreshold, setWordThreshold] = useState(200);
@@ -37,6 +37,18 @@ function SpeechRecognition({ setOptimizedText }) {
     stopRecognition
   } = useSpeechRecognition(handleOptimization, wordThreshold, language);
 
+  // 开始录音
+  const startRecording = () => {
+    startRecognition();
+    setIsRecording(true); // 添加这行，设置正在录音状态
+  };
+
+  // 停止录音
+  const stopRecording = () => {
+    stopRecognition();
+    setIsRecording(false); // 添加这行，设置录音已停止
+  };
+
   // 处理阈值变更
   const handleThresholdChange = (e) => {
     setWordThreshold(parseInt(e.target.value));
@@ -60,8 +72,8 @@ function SpeechRecognition({ setOptimizedText }) {
       
       <RecordingControls 
         isListening={isListening} 
-        startRecognition={startRecognition} 
-        stopRecognition={stopRecognition}
+        startRecognition={startRecording} 
+        stopRecognition={stopRecording}
         currentLanguage={currentLanguage}
         onLanguageChange={handleLanguageChange}
       />

@@ -244,9 +244,30 @@ body::after {
   transform: translateY(-2px);
 }
 
+/* 修改 header 样式，添加位置相关样式 */
 .header {
   text-align: center;
   position: relative;
+  height: 120px; /* 增加高度以容纳波形 */
+  margin-bottom: 30px;
+  overflow: hidden; /* 确保波形不会溢出 */
+  border-radius: 12px;
+  background-color: rgba(255, 249, 230, 0.7); /* 半透明背景 */
+  padding: 20px;
+}
+
+.header-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.header-content {
+  position: relative;
+  z-index: 1; /* 确保内容在波形上方 */
 }
 
 .header h1 {
@@ -260,7 +281,7 @@ body::after {
   display: inline-block;
 }
 
-/* 龙猫耳朵装饰 */
+/* 龙猫耳朵装饰 - 保持现有样式 */
 .header h1::before,
 .header h1::after {
   content: "";
@@ -270,7 +291,7 @@ body::after {
   height: 40px;
   background-color: #5c8d89;
   border-radius: 50% 50% 0 0;
-  z-index: -1;
+  z-index: 1;
 }
 
 .header h1::before {

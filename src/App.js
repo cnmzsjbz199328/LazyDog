@@ -3,12 +3,14 @@ import SpeechRecognition from './components/SpeechRecognition';
 import OptimizedText from './components/OptimizedText';
 import ContentDisplay from './components/ContentDisplay';
 import MindMap from './components/MindMap';
-import { BackgroundProvider } from './context/BackgroundContext';
+import Header from './components/Header';
 import { ApiProvider } from './context/ApiContext';
+import { BackgroundProvider } from './context/BackgroundContext';
 import './App.css';
 
 function App() {
   const [optimizedText, setOptimizedText] = useState(null);
+  const [isRecording, setIsRecording] = useState(false); // 添加录音状态
   const [parsedContent, setParsedContent] = useState({
     content: "",
     mainPoint: ""
@@ -30,13 +32,14 @@ function App() {
     <ApiProvider>
       <BackgroundProvider>
         <div className="App">
-          <div className="header">
-            <h1>LazyDog</h1>
-          </div>
+          <Header isRecording={isRecording} />
 
           <div className="container">
             <div className="speechPanel">
-              <SpeechRecognition setOptimizedText={setOptimizedText} />
+              <SpeechRecognition 
+                setOptimizedText={setOptimizedText} 
+                setIsRecording={setIsRecording} // 传递录音状态设置函数
+              />
             </div>
             
             <div className="centerPanel">
