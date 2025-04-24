@@ -109,12 +109,9 @@
   flex-direction: column;
   flex: 1;  /* 允许容器伸展填充剩余空间 */
   overflow: hidden; /* 更改为 hidden 避免整体溢出 */
-  border: 1px solid var(--border-color, #d1c3a6);
-  border-radius: var(--border-radius, 8px);
   position: relative;
   width: 100%;
-  min-height: 200px; /* 添加最小高度确保容器有足够空间 */
-  max-height: 400px; /* 确保有固定的最大高度而不是相对值 */
+  max-height: 350px; /* 确保有固定的最大高度而不是相对值 */
   background-color: rgba(255, 255, 255, 0.2); /* 轻微的背景以区分容器 */
 }
 
@@ -142,8 +139,6 @@
   
   /* 关键修复：确保滚动正常工作 */
   flex: 1; 
-  height: 0; /* 关键属性：强制子元素遵守flex布局 - 不能与 height: auto 同时存在 */
-  min-height: 150px;
   overflow-y: auto; /* 启用垂直滚动 */
   max-width: 100%;
   box-sizing: border-box;
