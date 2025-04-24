@@ -8,7 +8,7 @@ import useMermaid from './hooks/useMermaid';
  * MindMap 容器组件
  * 负责状态管理和 API 调用
  */
-const MindMapContainer = ({ content, mainPoint }) => {
+const MindMapContainer = ({ content, mainPoint, ...props }) => {
   const [error, setError] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [svgContent, setSvgContent] = useState('');
@@ -69,13 +69,16 @@ const MindMapContainer = ({ content, mainPoint }) => {
 
       try {
         setIsProcessing(true);
-        console.log("Generating mind map for:", mainPoint);
+        console.group("MindMapContainer: 生成思维导图");
+        console.log("主题:", mainPoint);
         
-        // 使用 MindMapUtil 生成思维导图
+        // 使用 MindMapUtil 生成思维导图，不需要传递额外的上下文对象
+        // MindMapUtil会直接从localStorage获取最新数据
         let mapCode = await generateMindMap(content, mainPoint, setIsProcessing);
         
         setCurrentMapSource('generated');
         generateMindMapSvg(mapCode, mainPoint);
+        console.groupEnd();
       } catch (err) {
         console.error('Failed to generate mind map:', err);
         setError('Unable to generate mind map. Please try again later.');

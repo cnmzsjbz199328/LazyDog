@@ -45,34 +45,60 @@ const saveMindMapToCache = (content, mainPoint, mindMapCode) => {
  * 
  * @returns {Object} Object containing historical records and background information
  */
+/**
+ * 获取上下文信息 - 优化版本
+ * 总是直接从localStorage获取最新数据，避免状态同步问题
+ * 
+ * @returns {Object} 包含历史要点和背景信息的对象
+ */
 const getContextualInfo = () => {
   try {
-    // Get history records
-    const apiResponse = localStorage.getItem('apiResponse');
-    let keyPoints = [];
+    console.group('思维导图生成 - 获取上下文信息');
     
-    if (apiResponse) {
-      const historyRecords = JSON.parse(apiResponse);
-      
-      // Extract mainPoint from the 5 most recent records as key points
-      if (Array.isArray(historyRecords) && historyRecords.length > 0) {
-        keyPoints = historyRecords
-          .slice(-50) // Last 50 records
-          .map(record => record.mainPoint)
-          .filter(point => point && point.trim() !== '');
+    // === 1. 直接从localStorage获取背景信息 ===
+    const backgroundInfo = localStorage.getItem('lastSavedBackground') || '';
+    console.log(`直接从localStorage获取背景信息: "${backgroundInfo}"`);
+    
+    // === 2. 直接从localStorage获取所有历史要点 ===
+    let keyPoints = [];
+    try {
+      const apiResponse = localStorage.getItem('apiResponse');
+      if (apiResponse) {
+        const historyRecords = JSON.parse(apiResponse);
+        if (Array.isArray(historyRecords)) {
+          keyPoints = historyRecords
+            .filter(record => record && record.mainPoint && record.mainPoint.trim())
+            .map(record => record.mainPoint);
+          console.log(`直接从localStorage获取${keyPoints.length}条历史要点`);
+          
+          // 打印部分历史要点做示例
+          if (keyPoints.length > 0) {
+            const sampleSize = Math.min(5, keyPoints.length);
+            console.log('历史要点样本:');
+            keyPoints.slice(-sampleSize).forEach((point, i) => {
+              console.log(`  ${i+1}. ${point}`);
+            });
+          }
+        }
       }
+    } catch (err) {
+      console.error('解析历史记录时出错:', err);
     }
     
-    // Get background information
-    const backgroundInfo = localStorage.getItem('lastSavedBackground') || '';
+    console.log(`最终使用${keyPoints.length}条历史要点和背景信息:"${backgroundInfo}"`);
+    console.groupEnd();
     
     return {
       keyPoints,
       backgroundInfo: backgroundInfo.trim()
     };
   } catch (error) {
-    console.error('Failed to get contextual information:', error);
-    return { keyPoints: [], backgroundInfo: '' };
+    console.error('获取上下文信息失败:', error);
+    console.groupEnd();
+    return { 
+      keyPoints: [], 
+      backgroundInfo: localStorage.getItem('lastSavedBackground') || '' 
+    };
   }
 };
 
@@ -81,10 +107,12 @@ const getContextualInfo = () => {
  * Convert text content to Mermaid format mind map using AI
  * Integrate key points from history records and background information
  * 
- * @param {string} content - Content text to process
- * @param {string} mainPoint - Main point (used as root node)
- * @param {function} setProcessingState - Function to update processing state
- * @returns {Promise<string>} - Returns the generated mind map code
+/**
+ * 生成思维导图数据
+ * @param {string} content - 内容文本
+ * @param {string} mainPoint - 主要要点
+ * @param {function} setProcessingState - 更新处理状态的函数
+ * @returns {Promise<string>} - 生成的思维导图代码
  */
 export const generateMindMap = async (content, mainPoint, setProcessingState) => {
   // 设置处理状态
@@ -92,37 +120,88 @@ export const generateMindMap = async (content, mainPoint, setProcessingState) =>
     setProcessingState(true);
   }
   
-  // 注意：我们仍然使用content作为缓存键，但不将其包含在提示中
-  // 1. 首先检查缓存
-  const cachedMindMap = getMindMapFromCache(content, mainPoint);
-  if (cachedMindMap) {
-    if (setProcessingState) {
-      setProcessingState(false);
+  console.group('思维导图生成过程');
+  console.log('主题要点:', mainPoint);
+  
+  try {
+    // 1. 首先检查缓存
+    const cachedMindMap = getMindMapFromCache(content, mainPoint);
+    if (cachedMindMap) {
+      console.log('使用缓存的思维导图');
+      if (setProcessingState) {
+        setProcessingState(false);
+      }
+      console.groupEnd();
+      return cachedMindMap;
     }
-    return cachedMindMap;
-  }
-  
-  // 获取上下文信息
-  const { keyPoints, backgroundInfo } = getContextualInfo();
-  
-  // 构建提示模板 - 如上所修改
-  let promptText = `Please create a Mermaid mind map about this main point.
+    
+    console.log('没有找到缓存，生成新的思维导图');
+    
+    // 直接从localStorage获取上下文信息
+    const { keyPoints, backgroundInfo } = getContextualInfo();
+    
+    // 详细记录所使用的上下文信息
+    console.group('上下文信息汇总');
+    console.log(`- 历史要点数量: ${keyPoints.length}`);
+    
+    // 打印若干历史要点做示例
+    if (keyPoints.length > 0) {
+      const sampleSize = Math.min(keyPoints.length, 5);
+      console.log(`- 历史要点示例 (共${keyPoints.length}条):`);
+      keyPoints.slice(-sampleSize).forEach((point, i) => {
+        console.log(`  ${i+1}. ${point}`);
+      });
+    }
+    
+    console.log(`- 背景信息: ${backgroundInfo ? `"${backgroundInfo}"` : '未设置'}`);
+    console.groupEnd();
+    
+    // 以下逻辑保持不变，但增加更详细的日志
+    let promptText = `Please create a Mermaid mind map about this main point.
 Main point: "${mainPoint}" (IMPORTANT: Use this exact text as the root node title)`;
 
-  // If background information exists, add to prompt
-  if (backgroundInfo) {
-    promptText += `\n\nIMPORTANT CONTEXT: "${backgroundInfo}"
-Please use the above context information to better understand and organize the mind map content.`;
-  }
+    // 如果存在背景信息，添加到提示中
+    if (backgroundInfo) {
+      console.log(`在提示中包含背景信息: "${backgroundInfo}"`);
+      promptText += `\n\nIMPORTANT CONTEXT: "${backgroundInfo}"
+Please use the above context information as the domain or subject area to better understand and organize the mind map content.`;
+    }
 
-  // If historical key points exist, add to prompt
-  if (keyPoints.length > 0) {
-    promptText += `\n\nUser's previously focused key topics: ${keyPoints.map(point => `"${point}"`).join(', ')}
-If the main point is related to these topics, you can establish appropriate connections.`;
-  }
+    // 如果存在历史要点，进行智能筛选并添加到提示中
+    if (keyPoints.length > 0) {
+      // 如果历史要点太多，只选择可能相关的一部分
+      let selectedPoints = keyPoints;
+      
+      // 如果超过15个要点，进行智能筛选
+      if (keyPoints.length > 15) {
+        console.log('历史要点数量过多，进行智能筛选');
+        
+        // 筛选策略：保留最新的几条(recency)，以及与当前主题可能相关的几条(relevance)
+        const recentPoints = keyPoints.slice(-8); // 最近的8条
+        
+        // 基于简单关键词匹配查找潜在相关要点
+        const mainPointLower = mainPoint.toLowerCase();
+        const relatedPoints = keyPoints.filter(point => {
+          const pointLower = point.toLowerCase();
+          // 查找关键词重叠
+          return mainPointLower.split(' ').some(word => 
+            word.length > 3 && pointLower.includes(word)
+          ) || pointLower.split(' ').some(word => 
+            word.length > 3 && mainPointLower.includes(word)
+          );
+        }).slice(0, 7); // 最多7条相关要点
+        
+        // 合并并去重
+        selectedPoints = [...new Set([...recentPoints, ...relatedPoints])];
+        console.log(`筛选后使用 ${selectedPoints.length} 条历史要点`);
+      }
+      
+      promptText += `\n\nUser's historical key topics: ${selectedPoints.map(point => `"${point}"`).join(', ')}
+Consider these historical topics when organizing the mind map structure and try to establish connections where relevant.`;
+    }
 
-  // Add output format requirements
-  promptText += `\n
+    // 其余部分保持不变
+    promptText += `\n
 The generated mind map should have these characteristics:
 1. Use Mermaid syntax
 2. Layout direction: Vertical (TD)
@@ -142,11 +221,9 @@ mindmap
     Key Concept 2
     Key Concept 3`;
 
-  try {
-    // 使用 callAI 并让服务层决定使用哪个 API
+    // 调用 AI 服务生成思维导图代码 - 现有代码部分保持不变...
+    // ...现有代码...
     const response = await callAI(promptText);
-    
-    // 服务层应返回使用的 API 信息，或者 formatResponse 不再需要 apiType 参数
     const formattedResponse = formatResponse(response);
     
     let mindMapCode = formattedResponse.text.trim();
@@ -168,14 +245,13 @@ mindmap
     saveMindMapToCache(content, mainPoint, mindMapCode);
     
     console.log("Generated mind map code:", mindMapCode);
+    console.groupEnd();
     return mindMapCode;
   } catch (error) {
     console.error('Mind map generation failed:', error);
+    console.groupEnd();
     
-    // All attempts failed, return simple error mind map
-    console.error('All mind map generation attempts failed');
-    
-    // 4. Reset processing state
+    // 出错时的兜底处理保持不变...
     if (setProcessingState) {
       setProcessingState(false);
     }
