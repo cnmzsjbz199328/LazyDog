@@ -3,6 +3,7 @@ import { generateMindMap } from '../../utils/MindMapUtil';
 import MindMapCore from './MindMapCore';
 import MindMapModal from './MindMapModal';
 import useMermaid from './hooks/useMermaid';
+import { useBackgroundContext } from '../../context/BackgroundContext';
 
 /**
  * MindMap 容器组件
@@ -17,6 +18,9 @@ const MindMapContainer = ({ content, mainPoint, ...props }) => {
   
   // 使用 Mermaid Hook
   const { isLoaded } = useMermaid();
+
+  // 获取背景信息
+  const { savedBackground } = useBackgroundContext();
 
   // 将 generateMindMapSvg 提取到 useEffect 外部，使其可以被其他函数引用
   const generateMindMapSvg = useCallback(async (mapCode, title) => {
@@ -71,10 +75,11 @@ const MindMapContainer = ({ content, mainPoint, ...props }) => {
         setIsProcessing(true);
         console.group("MindMapContainer: 生成思维导图");
         console.log("主题:", mainPoint);
+        console.log("使用背景信息:", savedBackground || '(无)');
         
         // 使用 MindMapUtil 生成思维导图，不需要传递额外的上下文对象
         // MindMapUtil会直接从localStorage获取最新数据
-        let mapCode = await generateMindMap(content, mainPoint, setIsProcessing);
+        let mapCode = await generateMindMap(content, mainPoint, setIsProcessing, savedBackground);
         
         setCurrentMapSource('generated');
         generateMindMapSvg(mapCode, mainPoint);
@@ -95,7 +100,7 @@ const MindMapContainer = ({ content, mainPoint, ...props }) => {
     };
 
     generateMap();
-  }, [content, mainPoint, currentMapSource, isLoaded, generateMindMapSvg]);
+  }, [content, mainPoint, currentMapSource, isLoaded, generateMindMapSvg, savedBackground]);
 
   // 添加思维导图更新处理
   const handleMindMapUpdate = useCallback(() => {

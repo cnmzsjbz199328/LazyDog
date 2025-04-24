@@ -33,18 +33,23 @@ export const convertToVerticalTreeFormat = (content, mainPoint) => {
     // 跳过mindmap行，保留非空行
     lines = lines.filter(line => line.trim() !== 'mindmap' && line.trim() !== '');
     
-    // 首先识别根节点
+    // 首先识别根节点 - 修改此部分以支持更多格式
     let rootNodeId = null;
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       const text = line.trim();
       
-      // 优化根节点识别，确保使用mainPoint
-      const rootMatch = text.match(/root\(\((.*?)\)\)/);
-      if (rootMatch || (line.search(/\S/) === 2 && i === 0)) {
+      // 增强根节点识别能力，支持多种格式
+      const rootMatch = text.match(/root\(\((.*?)\)\)/) || // 格式1: root((内容))
+                        text.match(/root\((.*?)\)/) ||    // 格式2: root(内容)
+                        (line.search(/\S/) === 2 && i === 0) ? { 1: text } : null; // 格式3: 第一行缩进格式
+      
+      if (rootMatch) {
         const rootId = `node${nodeCounter++}`;
-        // 如果找到根节点匹配，使用匹配内容；否则强制使用mainPoint
-        const rootContent = rootMatch ? rootMatch[1] : mainPoint;
+        // 优先使用匹配内容，即AI生成的标题
+        const rootContent = rootMatch[1] || mainPoint;
+        
+        console.log(`使用根节点内容: "${rootContent}" (来源: ${rootMatch[1] ? 'AI生成' : 'mainPoint'})`);
         
         result.push(`    ${rootId}["${rootContent}"]`);
         nodeMap[rootId] = { level: 0, text: rootContent };

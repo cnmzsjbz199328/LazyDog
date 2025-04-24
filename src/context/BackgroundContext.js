@@ -12,10 +12,17 @@ export function BackgroundProvider({ children }) {
   const [backgroundInfo, setBackgroundInfo] = useState(getInitialBackground);
   const [savedBackground, setSavedBackground] = useState(getInitialBackground);
 
-  // 同步localStorage和state
+  // 同步localStorage和state - 无论是否为空值
   useEffect(() => {
-    if (savedBackground) {
-      window.localStorage.setItem('lastSavedBackground', savedBackground);
+    // 不论savedBackground是什么值，都更新localStorage
+    if (savedBackground !== undefined) { // 只要不是undefined就更新
+      if (savedBackground) {
+        window.localStorage.setItem('lastSavedBackground', savedBackground);
+      } else {
+        // 当savedBackground为空字符串时，明确删除localStorage项
+        window.localStorage.removeItem('lastSavedBackground');
+      }
+      console.log(`Background context synced to localStorage: "${savedBackground}"`);
     }
   }, [savedBackground]);
 

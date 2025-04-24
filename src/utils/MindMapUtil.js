@@ -47,7 +47,7 @@ const saveMindMapToCache = (content, mainPoint, mindMapCode) => {
  */
 /**
  * 获取上下文信息 - 优化版本
- * 总是直接从localStorage获取最新数据，避免状态同步问题
+ * 使用与优化过程相同的背景信息源
  * 
  * @returns {Object} 包含历史要点和背景信息的对象
  */
@@ -55,11 +55,38 @@ const getContextualInfo = () => {
   try {
     console.group('思维导图生成 - 获取上下文信息');
     
-    // === 1. 直接从localStorage获取背景信息 ===
-    const backgroundInfo = localStorage.getItem('lastSavedBackground') || '';
-    console.log(`直接从localStorage获取背景信息: "${backgroundInfo}"`);
+    // 与 useOptimization 中使用相同的方式获取背景信息
+    // 1. 从BackgroundContext获取 (通过localStorage实现)
+    let backgroundInfo = '';
+    try {
+      // 直接获取 - 与 useOptimization 保持一致的获取方式
+      backgroundInfo = localStorage.getItem('lastSavedBackground') || '';
+      
+      // 增加详细日志
+      console.log(`从 localStorage.lastSavedBackground 获取背景信息: "${backgroundInfo}"`);
+      
+      // 额外检查 - 如果是在不同组件间调用可能存在时序问题
+      if (!backgroundInfo) {
+        // 作为备选，检查其他可能的存储位置
+        const backupLocations = ['background', 'backgroundInfo', 'context'];
+        for (const key of backupLocations) {
+          const backup = localStorage.getItem(key);
+          if (backup) {
+            console.log(`从备选位置 localStorage.${key} 获取背景信息: "${backup}"`);
+            backgroundInfo = backup;
+            break;
+          }
+        }
+      }
+      
+      // 再次记录最终使用的背景信息
+      console.log(`最终使用的背景信息: "${backgroundInfo}"`);
+    } catch (err) {
+      console.error('获取背景信息时出错:', err);
+    }
     
     // === 2. 直接从localStorage获取所有历史要点 ===
+    // 此部分保持不变...
     let keyPoints = [];
     try {
       const apiResponse = localStorage.getItem('apiResponse');
@@ -69,7 +96,7 @@ const getContextualInfo = () => {
           keyPoints = historyRecords
             .filter(record => record && record.mainPoint && record.mainPoint.trim())
             .map(record => record.mainPoint);
-          console.log(`直接从localStorage获取${keyPoints.length}条历史要点`);
+          console.log(`从localStorage获取${keyPoints.length}条历史要点`);
           
           // 打印部分历史要点做示例
           if (keyPoints.length > 0) {
@@ -112,9 +139,10 @@ const getContextualInfo = () => {
  * @param {string} content - 内容文本
  * @param {string} mainPoint - 主要要点
  * @param {function} setProcessingState - 更新处理状态的函数
+ * @param {string} externalBackground - 外部传入的背景信息
  * @returns {Promise<string>} - 生成的思维导图代码
  */
-export const generateMindMap = async (content, mainPoint, setProcessingState) => {
+export const generateMindMap = async (content, mainPoint, setProcessingState, externalBackground = null) => {
   // 设置处理状态
   if (setProcessingState) {
     setProcessingState(true);
@@ -122,6 +150,7 @@ export const generateMindMap = async (content, mainPoint, setProcessingState) =>
   
   console.group('思维导图生成过程');
   console.log('主题要点:', mainPoint);
+  console.log('外部传入背景:', externalBackground);
   
   try {
     // 1. 首先检查缓存
@@ -137,8 +166,12 @@ export const generateMindMap = async (content, mainPoint, setProcessingState) =>
     
     console.log('没有找到缓存，生成新的思维导图');
     
-    // 直接从localStorage获取上下文信息
-    const { keyPoints, backgroundInfo } = getContextualInfo();
+    // 获取上下文信息
+    const { keyPoints, backgroundInfo: localBackground } = getContextualInfo();
+    
+    // 优先使用外部传入的背景信息
+    const backgroundInfo = externalBackground !== null ? externalBackground : localBackground;
+    console.log(`使用背景信息: "${backgroundInfo}" (来源: ${externalBackground !== null ? '外部参数' : 'localStorage'})`);
     
     // 详细记录所使用的上下文信息
     console.group('上下文信息汇总');
@@ -206,16 +239,20 @@ The generated mind map should have these characteristics:
 1. Use Mermaid syntax
 2. Layout direction: Vertical (TD)
 3. First line must be "mindmap"
-4. CRITICAL: Second line must be the root node using the exact main point provided: "  root((${mainPoint}))"
-5. Extract 3-5 key concepts related to the main point, keep it concise
-6. Each concept should have at most 1 child node for detail
-7. Remove special characters like parentheses () and brackets []
-8. Keep node text under 30 characters, be concise and clear
-9. Return only the mind map code, without any explanation or Markdown markup
+4. Create a comprehensive root node title that synthesizes:
+   - The provided main point: "${mainPoint}"
+   - The background information: "${backgroundInfo}"
+   - The historical key topics provided above
+5. Format the root node as: "  root((Your Synthesized Title))"
+6. Extract 3-5 key concepts related to the main point, keep it concise
+7. Each concept should have at most 1 child node for detail
+8. Remove special characters like parentheses () and brackets []
+9. Keep node text under 30 characters, be concise and clear
+10. Return only the mind map code, without any explanation or Markdown markup
 
 Output example:
 mindmap
-  root((${mainPoint}))
+  root(mainPoint)
     Key Concept 1
       Detail 1
     Key Concept 2

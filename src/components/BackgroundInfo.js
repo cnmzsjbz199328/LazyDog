@@ -55,15 +55,21 @@ function BackgroundInfo() {
 
   // 清除按钮功能
   const handleClear = () => {
+    // 清除状态
     setEditedBackground('');
     setBackgroundInfo('');
     setSavedBackground('');
-    setSaveStatus('已清除');
-    console.log('Background info cleared');
     
+    // 明确清除localStorage
+    window.localStorage.removeItem('lastSavedBackground');
+    
+    console.log('Background info cleared from state and localStorage');
+    
+    // 验证清除
     setTimeout(() => {
-      setSaveStatus('');
-    }, 3000);
+      const storedValue = window.localStorage.getItem('lastSavedBackground');
+      console.log('Clear verification - localStorage value:', storedValue);
+    }, 100);
   };
 
 return (
@@ -97,15 +103,6 @@ return (
                 <i className="fas fa-save"></i> Save
             </button>
         </div>
-        
-        {savedBackground && (
-            <div className={styles.savedInfo}>
-                <h4 className={styles.savedHeading}>
-                    <i className="fas fa-info-circle"></i> Active Background Information
-                </h4>
-                <p className={styles.savedText}>{savedBackground}</p>
-            </div>
-        )}
     </div>
 );
 }
