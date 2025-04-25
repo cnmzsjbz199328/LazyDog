@@ -172,7 +172,7 @@ The generated mind map should have these characteristics:
    - The provided main point: "${mainPoint}"
    - The background information: "${backgroundInfo}"
    - The historical key topics provided above
-5. Format the root node as: "  root((Your Synthesized Title))"
+5. Format the root node as: "Your Synthesized Title"
 6. Extract 3-5 key concepts related to the main point, keep it concise
 7. Each concept should have at most 1 child node for detail
 8. Remove special characters like parentheses () and brackets []
@@ -181,7 +181,7 @@ The generated mind map should have these characteristics:
 
 Output example:
 mindmap
-  root(mainPoint)
+  Synthesized Title
     Key Concept 1
       Detail 1
     Key Concept 2
