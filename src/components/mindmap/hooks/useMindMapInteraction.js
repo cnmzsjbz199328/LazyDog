@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { analyzeNodeHierarchy } from '../utils/hierarchyAnalyzer';
 import { expandNode, mergeNodeExpansionToMindMap } from '../../../utils/nodeExpansionUtil';
-import { saveMindMapDataToLocalStorage } from '../../../utils/write';
+import { storageService } from '../../../services/storageService'; // 添加导入
 
 /**
  * 思维导图交互钩子 - 优化版本
@@ -11,7 +11,7 @@ import { saveMindMapDataToLocalStorage } from '../../../utils/write';
  * 3. 节点层级关系
  * 4. 节点文本信息
  */
-export const useMindMapInteraction = () => {
+export const useMindMapInteraction = (initialMindMapData) => {
   const [lastClickedNode, setLastClickedNode] = useState(null);
   const [relatedRecords, setRelatedRecords] = useState([]);
   const [nodeHierarchy, setNodeHierarchy] = useState([]);
@@ -21,14 +21,21 @@ export const useMindMapInteraction = () => {
   const [expandError, setExpandError] = useState(null);
   const [mindMapUpdated, setMindMapUpdated] = useState(false);
   
-  // 获取相关记录的函数 - 保留但简化实现
+  // 获取相关记录的函数 - 使用 storageService 获取主要数据
   const fetchRelatedRecords = useCallback((nodeText) => {
     try {
-      // 从localStorage获取数据
-      const storageKeys = ['apiResponse', 'abstract', 'summaryData'];
       let records = [];
       
-      for (const key of storageKeys) {
+      // 1. 从 storageService 获取主要历史数据
+      const historyRecords = storageService.getHistoryRecords();
+      if (Array.isArray(historyRecords)) {
+        records = [...records, ...historyRecords];
+      }
+      
+      // 2. 获取辅助存储中的数据
+      // 注：这部分可以考虑在未来迁移到 storageService 中
+      const auxiliaryKeys = ['abstract', 'summaryData'];
+      for (const key of auxiliaryKeys) {
         try {
           const data = localStorage.getItem(key);
           if (data) {
@@ -43,11 +50,12 @@ export const useMindMapInteraction = () => {
             }
           }
         } catch (e) {
-          console.warn(`Error parsing ${key} data:`, e);
+          console.warn(`解析辅助存储键 ${key} 数据失败:`, e);
         }
       }
       
-      if (records.length > 0) {
+      // 过滤与节点文本相关的记录
+      if (records.length > 0 && nodeText) {
         const searchText = nodeText.toLowerCase();
         const related = records.filter(record => {
           if (!record) return false;
@@ -64,32 +72,22 @@ export const useMindMapInteraction = () => {
           );
         });
         setRelatedRecords(related);
+        
+        // 添加日志，记录找到相关记录的数量
+        console.log(`找到 ${related.length} 条与节点文本 "${nodeText}" 相关的记录`);
       } else {
         setRelatedRecords([]);
+        console.log(`未找到与节点文本 "${nodeText || '空'}" 相关的记录`);
       }
     } catch (error) {
-      console.error('Error accessing localStorage:', error);
+      console.error('获取相关记录失败:', error);
       setRelatedRecords([]);
     }
   }, []);
   
-  // 获取思维导图原始数据功能
+  // 获取思维导图原始数据功能 - 使用 storageService
   const fetchMindMapOriginalData = useCallback(() => {
-    try {
-      const mindMapData = localStorage.getItem('mindmap_data');
-      if (mindMapData) {
-        const parsedData = JSON.parse(mindMapData);
-        return {
-          title: parsedData.title || '',
-          code: parsedData.code || '',
-          createdAt: parsedData.createdAt || new Date().toISOString()
-        };
-      }
-      return null;
-    } catch (error) {
-      console.error('获取思维导图原始数据失败:', error);
-      return null;
-    }
+    return storageService.getMindMapData();
   }, []);
 
   // 获取关键信息的统一函数
@@ -97,11 +95,9 @@ export const useMindMapInteraction = () => {
     // 1. 获取相关记录 (保留但不是重点)
     fetchRelatedRecords(nodeText);
     
-    // 2. 获取背景信息 (重点1)
+    // 2. 获取背景信息 (重点1) - 使用 storageService
     try {
-      const bgInfo = localStorage.getItem('lastSavedBackground') || 
-                     localStorage.getItem('background') || 
-                     '';
+      const bgInfo = storageService.getBackgroundInfo();
       setBackgroundInfo(bgInfo);
       console.log('==== 背景信息 ====');
       console.log(bgInfo || '没有背景信息');
@@ -110,31 +106,26 @@ export const useMindMapInteraction = () => {
       setBackgroundInfo('');
     }
     
-    // 3. 获取Main Points列表 (重点2)
+    // 3. 获取Main Points列表 (重点2) - 使用 storageService
     try {
       console.log('==== Abstract列表 ====');
-      const storedData = localStorage.getItem('apiResponse');
-      if (storedData) {
-        const parsedData = JSON.parse(storedData);
+      // 使用 storageService 获取历史记录
+      const records = storageService.getHistoryRecords();
+      
+      if (Array.isArray(records) && records.length > 0) {
+        // 提取有效的Main Points
+        const points = records
+          .filter(item => item && item.mainPoint && item.mainPoint.trim() !== '')
+          .map(item => item.mainPoint);
         
-        if (Array.isArray(parsedData) && parsedData.length > 0) {
-          // 提取有效的Main Points
-          const points = parsedData
-            .filter(item => item && item.mainPoint && item.mainPoint.trim() !== '')
-            .map(item => item.mainPoint);
-          
-          setMainPoints(points);
-          
-          // 格式化输出
-          const formattedPoints = points.map((point, index) => `${index + 1}. ${point}`).join('\n');
-          console.log(`找到${points.length}条Main Point记录：`);
-          console.log(formattedPoints);
-        } else {
-          console.log('没有找到有效的Main Point记录');
-          setMainPoints([]);
-        }
+        setMainPoints(points);
+        
+        // 格式化输出
+        const formattedPoints = points.map((point, index) => `${index + 1}. ${point}`).join('\n');
+        console.log(`找到${points.length}条Main Point记录：`);
+        console.log(formattedPoints);
       } else {
-        console.log('localStorage中没有apiResponse数据');
+        console.log('没有找到有效的Main Point记录');
         setMainPoints([]);
       }
     } catch (error) {
@@ -146,8 +137,9 @@ export const useMindMapInteraction = () => {
     console.log('==== 节点信息 ====');
     console.log(`当前节点: "${nodeText}" (ID: ${nodeId})`);
     
-    // 5. 获取并分析节点层级关系 (重点3)
-    const mindMapOriginalData = fetchMindMapOriginalData();
+    // 5. 获取并分析节点层级关系 (重点3) - 使用 storageService
+    // 注意：fetchMindMapOriginalData 也应当更新为使用 storageService
+    const mindMapOriginalData = storageService.getMindMapData();
     if (mindMapOriginalData) {
       console.log('==== 思维导图原始数据 ====');
       console.log(`标题: ${mindMapOriginalData.title}`);
@@ -176,22 +168,34 @@ export const useMindMapInteraction = () => {
     console.log(`节点文本: ${nodeText}`);
     console.log(`节点ID: ${nodeId}`);
     console.log(`相关记录数: ${relatedRecords.length}`);
-  }, [fetchRelatedRecords, relatedRecords.length, fetchMindMapOriginalData]);
+  }, [fetchRelatedRecords, relatedRecords.length]);
+
+  // 使用 storageService 替换直接 localStorage 访问
+  const fetchBackgroundInfo = useCallback(() => {
+    return storageService.getBackgroundInfo();
+  }, []);
+
+  const fetchHistoryPoints = useCallback(() => {
+    return storageService.getHistoryPoints();
+  }, []);
 
   // 处理节点点击的函数
   const handleNodeClick = useCallback((event) => {
-    const { nodeId, nodeText } = event.detail || {};
+    const { nodeId, nodeText } = event.detail;
     
-    if (!nodeText) return;
+    // 使用这些函数获取上下文信息
+    const backgroundInfo = fetchBackgroundInfo();
+    const historyPoints = fetchHistoryPoints();
     
-    console.log('==== 节点点击事件 ====');
-    console.log(`点击的节点: ${nodeText} (ID: ${nodeId})`);
+    console.log(`节点点击: ${nodeId} - ${nodeText}`);
+    console.log(`上下文: 背景信息 "${backgroundInfo}", ${historyPoints.length} 条历史记录`);
     
+    // 设置当前选中节点
     setLastClickedNode({ id: nodeId, text: nodeText });
     
-    // 获取所有关键信息
+    // 获取节点相关信息
     fetchKeyInformation(nodeText, nodeId);
-  }, [fetchKeyInformation]);
+  }, [fetchBackgroundInfo, fetchHistoryPoints, fetchKeyInformation]);
   
   // 添加全局事件监听器
   useEffect(() => {
@@ -256,8 +260,8 @@ export const useMindMapInteraction = () => {
           lastUpdated: new Date().toISOString()
         };
         
-        // 保存到localStorage
-        saveMindMapDataToLocalStorage(updatedMindMapData);
+        // 使用 storageService 保存（替换直接调用 saveMindMapDataToLocalStorage）
+        storageService.saveMindMapData(updatedMindMapData);
         
         // 标记已更新
         setMindMapUpdated(true);

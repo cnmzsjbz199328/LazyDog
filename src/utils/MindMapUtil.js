@@ -1,115 +1,49 @@
 import { callAI, formatResponse } from '../services/aiManagement';
-import { saveMindMapDataToLocalStorage } from './write'; // 修改导入语句
-// Add caching functionality to reduce repeated calls
-const getMindMapFromCache = (content, mainPoint) => {
-  try {
-    // Use combination of content and main point as cache key
-    const cacheKey = `mindmap_cache_${btoa(content.slice(0, 100) + mainPoint).replace(/=/g, '')}`;
-    const cached = localStorage.getItem(cacheKey);
-    
-    if (cached) {
-      const cachedData = JSON.parse(cached);
-      // Check if cache is within 24 hours
-      const cacheTime = new Date(cachedData.timestamp);
-      const now = new Date();
-      const hoursDiff = (now - cacheTime) / (1000 * 60 * 60);
-      
-      if (hoursDiff < 24) {
-        console.log("Using cached mind map data");
-        return cachedData.mindMapCode;
-      }
-    }
-    return null;
-  } catch (err) {
-    console.error('Error accessing cache:', err);
-    return null;
-  }
-};
-
-const saveMindMapToCache = (content, mainPoint, mindMapCode) => {
-  try {
-    const cacheKey = `mindmap_cache_${btoa(content.slice(0, 100) + mainPoint).replace(/=/g, '')}`;
-    const cacheData = {
-      mindMapCode,
-      timestamp: new Date().toISOString()
-    };
-    localStorage.setItem(cacheKey, JSON.stringify(cacheData));
-  } catch (err) {
-    console.error('Error saving to cache:', err);
-  }
-};
+import { storageService } from '../services/storageService'; // 修改导入
 
 /**
- * Get historical records and background information from localStorage
- * Used to enhance mind map generation
- * 
- * @returns {Object} Object containing historical records and background information
+ * 从缓存获取思维导图
+ * @param {string} content - 内容文本
+ * @param {string} mainPoint - 主题要点
+ * @returns {string|null} - 缓存的思维导图代码或 null
  */
+const getMindMapFromCache = (content, mainPoint) => {
+  return storageService.getMindMapCache(content, mainPoint);
+};
+
 /**
- * 获取上下文信息 - 优化版本
- * 使用与优化过程相同的背景信息源
- * 
- * @returns {Object} 包含历史要点和背景信息的对象
+ * 保存思维导图到缓存
+ * @param {string} content - 内容文本
+ * @param {string} mainPoint - 主题要点
+ * @param {string} mindMapCode - 思维导图代码
+ */
+const saveMindMapToCache = (content, mainPoint, mindMapCode) => {
+  storageService.saveMindMapCache(content, mainPoint, mindMapCode);
+};
+
+/**
+ * 获取上下文信息
+ * @returns {Object} - 包含历史要点和背景信息的对象
  */
 const getContextualInfo = () => {
   try {
     console.group('思维导图生成 - 获取上下文信息');
     
-    // 与 useOptimization 中使用相同的方式获取背景信息
-    // 1. 从BackgroundContext获取 (通过localStorage实现)
-    let backgroundInfo = '';
-    try {
-      // 直接获取 - 与 useOptimization 保持一致的获取方式
-      backgroundInfo = localStorage.getItem('lastSavedBackground') || '';
-      
-      // 增加详细日志
-      console.log(`从 localStorage.lastSavedBackground 获取背景信息: "${backgroundInfo}"`);
-      
-      // 额外检查 - 如果是在不同组件间调用可能存在时序问题
-      if (!backgroundInfo) {
-        // 作为备选，检查其他可能的存储位置
-        const backupLocations = ['background', 'backgroundInfo', 'context'];
-        for (const key of backupLocations) {
-          const backup = localStorage.getItem(key);
-          if (backup) {
-            console.log(`从备选位置 localStorage.${key} 获取背景信息: "${backup}"`);
-            backgroundInfo = backup;
-            break;
-          }
-        }
-      }
-      
-      // 再次记录最终使用的背景信息
-      console.log(`最终使用的背景信息: "${backgroundInfo}"`);
-    } catch (err) {
-      console.error('获取背景信息时出错:', err);
-    }
+    // 从 storageService 获取背景信息
+    const backgroundInfo = storageService.getBackgroundInfo();
+    console.log(`获取背景信息: "${backgroundInfo}"`);
     
-    // === 2. 直接从localStorage获取所有历史要点 ===
-    // 此部分保持不变...
-    let keyPoints = [];
-    try {
-      const apiResponse = localStorage.getItem('apiResponse');
-      if (apiResponse) {
-        const historyRecords = JSON.parse(apiResponse);
-        if (Array.isArray(historyRecords)) {
-          keyPoints = historyRecords
-            .filter(record => record && record.mainPoint && record.mainPoint.trim())
-            .map(record => record.mainPoint);
-          console.log(`从localStorage获取${keyPoints.length}条历史要点`);
-          
-          // 打印部分历史要点做示例
-          if (keyPoints.length > 0) {
-            const sampleSize = Math.min(5, keyPoints.length);
-            console.log('历史要点样本:');
-            keyPoints.slice(-sampleSize).forEach((point, i) => {
-              console.log(`  ${i+1}. ${point}`);
-            });
-          }
-        }
-      }
-    } catch (err) {
-      console.error('解析历史记录时出错:', err);
+    // 从 storageService 获取历史要点
+    const keyPoints = storageService.getHistoryPoints();
+    console.log(`获取${keyPoints.length}条历史要点`);
+    
+    // 打印部分历史要点示例
+    if (keyPoints.length > 0) {
+      const sampleSize = Math.min(5, keyPoints.length);
+      console.log('历史要点样本:');
+      keyPoints.slice(-sampleSize).forEach((point, i) => {
+        console.log(`  ${i+1}. ${point}`);
+      });
     }
     
     console.log(`最终使用${keyPoints.length}条历史要点和背景信息:"${backgroundInfo}"`);
@@ -124,20 +58,15 @@ const getContextualInfo = () => {
     console.groupEnd();
     return { 
       keyPoints: [], 
-      backgroundInfo: localStorage.getItem('lastSavedBackground') || '' 
+      backgroundInfo: storageService.getBackgroundInfo() || ''
     };
   }
 };
 
 /**
- * Generate mind map data function
- * Convert text content to Mermaid format mind map using AI
- * Integrate key points from history records and background information
- * 
-/**
  * 生成思维导图数据
  * @param {string} content - 内容文本
- * @param {string} mainPoint - 主要要点
+ * @param {string} mainPoint - 主题要点
  * @param {function} setProcessingState - 更新处理状态的函数
  * @param {string} externalBackground - 外部传入的背景信息
  * @returns {Promise<string>} - 生成的思维导图代码
@@ -301,23 +230,21 @@ mindmap
 };
 
 /**
- * Save mind map code to local storage
- * 
- * @param {string} mindMapCode - Generated mind map code
- * @param {string} title - Mind map title
+ * 保存思维导图数据到 localStorage
+ * @param {string} mindMapCode - 思维导图代码
+ * @param {string} title - 思维导图标题
  */
 const saveMindMapToLocalStorage = (mindMapCode, title) => {
   try {
-    // Create storage object
+    // 创建思维导图数据对象
     const mindMapData = {
       title: title || 'Mind Map',
       code: mindMapCode,
       createdAt: new Date().toISOString()
     };
     
-    // 使用新函数保存
-    saveMindMapDataToLocalStorage(mindMapData);
-    
+    // 使用 storageService 保存
+    storageService.saveMindMapData(mindMapData);
     console.log('Mind map data saved to local storage');
   } catch (err) {
     console.error('Failed to save mind map data:', err);

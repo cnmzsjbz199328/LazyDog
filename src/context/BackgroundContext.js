@@ -1,28 +1,22 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { storageService } from '../services/storageService'; // 修改导入
 
 const BackgroundContext = createContext();
 
 export function BackgroundProvider({ children }) {
-  // 尝试从localStorage获取初始值
+  // 使用 storageService 获取初始背景信息
   const getInitialBackground = () => {
-    const stored = window.localStorage.getItem('lastSavedBackground');
-    return stored || '';
+    return storageService.getBackgroundInfo();
   };
 
   const [backgroundInfo, setBackgroundInfo] = useState(getInitialBackground);
   const [savedBackground, setSavedBackground] = useState(getInitialBackground);
 
-  // 同步localStorage和state - 无论是否为空值
+  // 当 savedBackground 变化时，使用 storageService 更新
   useEffect(() => {
-    // 不论savedBackground是什么值，都更新localStorage
-    if (savedBackground !== undefined) { // 只要不是undefined就更新
-      if (savedBackground) {
-        window.localStorage.setItem('lastSavedBackground', savedBackground);
-      } else {
-        // 当savedBackground为空字符串时，明确删除localStorage项
-        window.localStorage.removeItem('lastSavedBackground');
-      }
-      console.log(`Background context synced to localStorage: "${savedBackground}"`);
+    if (savedBackground !== undefined) {
+      storageService.setBackgroundInfo(savedBackground);
+      console.log(`Background context synced: "${savedBackground}"`);
     }
   }, [savedBackground]);
 

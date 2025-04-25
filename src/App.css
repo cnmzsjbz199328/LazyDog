@@ -80,7 +80,7 @@ body::after {
 
 .container {
   max-width: 1200px;
-  margin: 0 auto;
+  margin: 100px auto;
   padding: 0 10px;
   display: flex;
   flex-wrap: wrap;
@@ -247,13 +247,15 @@ body::after {
 /* 修改 header 样式，添加位置相关样式 */
 .header {
   text-align: center;
-  position: relative;
   height: 120px; /* 增加高度以容纳波形 */
-  margin-bottom: 30px;
   overflow: hidden; /* 确保波形不会溢出 */
   border-radius: 12px;
-  background-color: rgba(255, 249, 230, 0.7); /* 半透明背景 */
   padding: 20px;
+  position: fixed; /* 改为固定定位 */
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
 }
 
 .header-background {

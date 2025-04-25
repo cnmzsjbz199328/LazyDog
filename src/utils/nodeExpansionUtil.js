@@ -1,44 +1,26 @@
 import { callAI, formatResponse } from '../services/aiManagement';
+import { storageService } from '../services/storageService'; // 引入 storageService
 
-/**
- * Save node expansion results to localStorage
- * @param {string} nodeId - ID of the expanded node
- * @param {string} nodeText - Text of the expanded node
- * @param {Array} childNodes - Generated child nodes list
- */
-const saveNodeExpansionResult = (nodeId, nodeText, childNodes) => {
-  try {
-    const expansionKey = `node_expansion_${nodeId}`;
-    const expansionData = {
-      parentNode: { id: nodeId, text: nodeText },
-      childNodes: childNodes,
-      timestamp: new Date().toISOString()
-    };
-    localStorage.setItem(expansionKey, JSON.stringify(expansionData));
-    console.log(`Expansion result saved: ${nodeId} - ${childNodes.length} child nodes`);
-  } catch (err) {
-    console.error('Failed to save node expansion result:', err);
-  }
-};
+// 删除未使用的函数
+// 不再需要这个函数，因为现在使用 storageService.saveNodeExpansionCache
+// const saveNodeExpansionResult = (nodeId, nodeText, childNodes) => {...};
 
 /**
  * Get cached node expansion results
  * @param {string} nodeId - Node ID
  * @returns {Object|null} Cached expansion result or null
  */
-export const getCachedExpansion = (nodeId) => {
-  try {
-    const expansionKey = `node_expansion_${nodeId}`;
-    const cached = localStorage.getItem(expansionKey);
-    
-    if (cached) {
-      return JSON.parse(cached);
-    }
-    return null;
-  } catch (err) {
-    console.error('Failed to get node expansion cache:', err);
-    return null;
-  }
+const getCachedExpansion = (nodeId) => {
+  return storageService.getNodeExpansionCache(nodeId);
+};
+
+/**
+ * Save node expansion results to cache
+ * @param {string} nodeId - Node ID
+ * @param {Array} childNodes - Generated child nodes list
+ */
+const saveExpansionToCache = (nodeId, childNodes) => {
+  storageService.saveNodeExpansionCache(nodeId, childNodes);
 };
 
 /**
@@ -106,7 +88,7 @@ export const expandNode = async ({
     const childNodes = parseNodeExpansionResponse(formattedResponse.text);
     
     // 6. Save results
-    saveNodeExpansionResult(nodeId, nodeText, childNodes);
+    saveExpansionToCache(nodeId, childNodes);
     
     // 7. Return results
     if (onSuccess) onSuccess(childNodes);
