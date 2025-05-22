@@ -71,4 +71,4 @@ export const API_TYPES = Object.keys(providers).reduce((types, type) => {
  * 获取默认API类型
  * @returns {string} 默认API类型
  */
-export const DEFAULT_API = API_TYPES.XAI;
+export const DEFAULT_API = API_TYPES.GEMINI;
