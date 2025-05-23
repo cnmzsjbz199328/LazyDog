@@ -79,4 +79,4 @@ export const API_TYPES = {
   XAI: 'xai'  // Add this line
 };
 // Default settings
-export const DEFAULT_API = API_TYPES.XAI; // Setting OpenRouter as the default API
+export const DEFAULT_API = API_TYPES.GEMINI; // Setting OpenRouter as the default API
