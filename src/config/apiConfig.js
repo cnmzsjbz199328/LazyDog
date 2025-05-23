@@ -17,7 +17,7 @@ export const GLM_CONFIG = {
 // Gemini API Configuration
 export const GEMINI_CONFIG = {
   apiKey: process.env.REACT_APP_GEMINI_API_KEY,
-  endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent',
+  endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
   defaultParams: {}
 };
 

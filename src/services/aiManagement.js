@@ -35,7 +35,7 @@ export const getAvailableProviders = () => {
  */
 export const callAI = async (text, apiType = null, options = {}) => {
   // 确定要使用的API类型
-  const currentApiType = apiType || localStorage.getItem('currentApiType') || DEFAULT_API;
+  const currentApiType = apiType || DEFAULT_API;
   
   // 获取API提供者
   const provider = getProvider(currentApiType);
